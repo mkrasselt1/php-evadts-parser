@@ -1,0 +1,17 @@
+{
+  "name": "peanutpay/php-evadts-parser",
+  "description": "a module to parse eva-dts files from vending machines.",
+  "type": "library",
+  "require": {},
+  "autoload": {
+	"psr-4": {
+		"PeanutPay\\PhpEvaDts\\": "src/"
+	}
+  },
+  "authors": [
+    {
+      "name": "Michael Krasselt",
+      "email": "michael@peanutpay.de"
+    }
+  ]
+}
