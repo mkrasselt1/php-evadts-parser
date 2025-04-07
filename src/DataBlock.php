@@ -16,7 +16,6 @@ class DataBlock implements DataBlockInterface
         if (!empty($msg)) {
             $this->parse($msg);
         }
-        return $this;
     }
 
     public static function create($dataString): ?DataBlockInterface
@@ -40,12 +39,24 @@ class DataBlock implements DataBlockInterface
             "CA2"       => CoinVendsDataBlock::class,
             "CA3"       => DataBlock::class,
             "CA4"       => DataBlock::class,
+            "CA5"       => PowerOutDataBlock::class,
+            "CA6"       => ReadsOpenDataBlock::class,
+
+            "CA7"       => CashDiscountsDataBlock::class,
             "CA8"       => DataBlock::class,
+            "CA9"       => CoinChangeDataBlock::class,
             "CA10"      => DataBlock::class,
+            "CA11"      => CoinAcceptedDataBlock::class,
+            "CA12"      => CoinDispensedDataBlock::class,
+            "CA13"      => CoinFilledDataBlock::class,
+            "CA15"      => CoinTubeLevelDataBlock::class,
             "CA16"      => DataBlock::class,
             "BA1"       => BillIDDataBlock::class,
             "DA1"       => CashlessIDDataBlock::class,
             "DA2"       => CashlessVendsDataBlock::class,
+            "DA5"       => CashlessDiscountsDataBlock::class,
+            "MA5"       => DataBlock::class,
+            "MC5"       => DataBlock::class,
 
             "FA1"       => GatewayIDDataBlock::class,
             "PA1"       => ProductDataBlock::class,
@@ -60,7 +71,7 @@ class DataBlock implements DataBlockInterface
         if (isset($cmdList[$cmdType])) {
             return class_exists($cmdList[$cmdType]) ? new $cmdList[$cmdType]($dataString) : null;
         } else {
-            echo "unknown:" . $cmdType . PHP_EOL;
+            echo "unknown:" . $cmdType . ":" . $dataString . PHP_EOL;
         }
         return null;
     }
