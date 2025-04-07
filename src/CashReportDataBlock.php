@@ -33,41 +33,12 @@ class CashReportDataBlock extends DataBlock
     public function __toString()
     {
         return
-            implode("\t", [
-                "last Reset",
-                "",
-                "",
-                "",
-                "initialization",
-                "",
-                "",
-                "",
-                "",
-            ]) . "\r\n" .
-            implode("\t", [
-                "cash",
-                "2box",
-                "2tube",
-                "bills",
-                "2recy",
-                "cash",
-                "2box",
-                "2tube",
-                "bills",
-                "2ecy",
-            ]) . "\r\n" .
-            implode("\t", [
-                ($this->cashInSinceLastReset / 100),
-                ($this->cashToCashBoxSinceLastReset / 100),
-                ($this->cashToTubesSinceLastReset / 100),
-                ($this->billsInSinceLastReset / 100),
-                ($this->billsToRecyclerSinceLastReset / 100),
-
-                ($this->cashInSinceInitialization / 100),
-                ($this->cashToCashBoxSinceInitialization / 100),
-                ($this->cashToTubesSinceInitialization / 100),
-                ($this->billsInSinceInitialization / 100),
-                ($this->billsToRecyclerSinceInitialization / 100),
-            ]);
+            "cash\t initialization\t\t reset\n\r" .
+            "    \t  value         \t\t number\n\r" .
+            "cash:\t " . ($this->cashInSinceLastReset / 100) . "\t\t " . ($this->cashInSinceInitialization / 100) . "\t\r\n" .
+            "2box:\t " . ($this->cashToCashBoxSinceLastReset / 100) . "\t\t " . ($this->cashToCashBoxSinceInitialization / 100) . "\t\r\n" .
+            "2tube:\t " . ($this->cashToTubesSinceLastReset / 100) . "\t\t " . ($this->cashToTubesSinceInitialization / 100) . "\t\r\n" .
+            "bills:\t " . ($this->billsInSinceLastReset / 100) . "\t\t " . ($this->billsInSinceInitialization / 100) . "\t\r\n" .
+            "2recy:\t " . ($this->billsToRecyclerSinceLastReset / 100) . "\t\t " . ($this->billsToRecyclerSinceInitialization / 100) . "\t\r\n";
     }
 }
