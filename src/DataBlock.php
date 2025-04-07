@@ -67,7 +67,7 @@ class DataBlock implements DataBlockInterface
             "PA2"       => ProductVendsDataBlock::class,
             "PA3"       => ProductTestVendsDataBlock::class,
             "PA4"       => ProductFreeVendsDataBlock::class,
-            "PA7"       => ProductVendsDataBlock::class,
+            "PA7"       => ProductVendsNewDataBlock::class,
             "LA1"       => PriceListVendsDataBlock::class,
             "EA1"       => EventDataBlock::class,
             "EA2"       => EventDetailsDataBlock::class,
