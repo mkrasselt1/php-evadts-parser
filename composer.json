@@ -4,9 +4,12 @@
   "type": "library",
   "require": {},
   "autoload": {
-	"psr-4": {
-		"PeanutPay\\PhpEvaDts\\": "src/"
-	}
+    "psr-4": {
+      "PeanutPay\\PhpEvaDts\\": "src/"
+    }
+  },
+  "scripts": {
+    "example_sielaff": "php ./example/test.php ./example/sielaff.eva_dts"
   },
   "authors": [
     {

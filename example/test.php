@@ -5,7 +5,13 @@ use PeanutPay\PhpEvaDts\Parser;
 
 $parser = new Parser();
 
-// $parser->load("./rhevendors.eva_dts");
-$parser->load(__DIR__ . "/2024-11-27-15-00-Batch 2 - 17 PPHQ.txt");
-// $parser->load("./sielaff.eva_dts");
-echo $parser->getReport();
+if (isset($argv[1])) {
+    if (is_file($argv[1])) {
+        $parser->load($argv[1]);
+        echo $parser->getReport();
+    } else {
+        echo "file not found: " . $argv[1] . "\r\n";
+    }
+} else {
+    echo "missing filename parameter";
+}
