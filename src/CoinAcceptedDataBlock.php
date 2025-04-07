@@ -17,7 +17,7 @@ class CoinAcceptedDataBlock extends DataBlock
         9 => "coinOrigin",
     ];
 
-    public $coinValue = "";
+    public $coinValue = 0;
     public $amountInLastReset = "";
     public $amount2CashboxLastReset = "";
     public $amount2TubeLastReset = "";

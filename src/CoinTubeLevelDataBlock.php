@@ -18,7 +18,7 @@ class CoinTubeLevelDataBlock extends DataBlock
         10 => "block7",
     ];
 
-    public $coinSum = "";
+    public $coinSum = 0;
     public $blockNo = "";
     public $block0 = "";
     public $block1 = "";

@@ -10,8 +10,8 @@ class CoinChangeDataBlock extends DataBlock
         2 => "vendValueInInit",
     ];
 
-    public $vendValueLastRest = "";
-    public $vendValueInInit = "";
+    public $vendValueLastRest = 0;
+    public $vendValueInInit = 0;
 
     public function __toString()
     {

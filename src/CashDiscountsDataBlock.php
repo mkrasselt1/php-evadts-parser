@@ -16,14 +16,14 @@ class CashDiscountsDataBlock extends DataBlock
         8 => "numberSurchargeInit",
     ];
 
-    public $discountValueLastRest = "";
-    public $discountValueInit = "";
-    public $numberDiscountLastRest = "";
-    public $numberDiscountInit = "";
-    public $surchargeValueLastRest = "";
-    public $surchargeValueInit = "";
-    public $numberSurchargeLastRest = "";
-    public $numberSurchargeInit = "";
+    public $discountValueLastRest = 0;
+    public $discountValueInit = 0;
+    public $numberDiscountLastRest = 0;
+    public $numberDiscountInit = 0;
+    public $surchargeValueLastRest = 0;
+    public $surchargeValueInit = 0;
+    public $numberSurchargeLastRest = 0;
+    public $numberSurchargeInit = 0;
 
 
     public function __toString()

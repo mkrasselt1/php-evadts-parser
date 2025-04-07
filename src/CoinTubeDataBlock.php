@@ -15,7 +15,7 @@ class CoinTubeDataBlock extends DataBlock
     ];
 
     public $coinTypeNumber = "";
-    public $value = "";
+    public $value = 0;
     public $count = "";
     public $countFilled = "";
     public $countDispensedInvent = "";

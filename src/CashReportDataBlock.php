@@ -19,16 +19,16 @@ class CashReportDataBlock extends DataBlock
         12 => 'billsToRecyclerSinceInitialization',
     ];
 
-    public $cashInSinceLastReset;
-    public $cashToCashBoxSinceLastReset;
-    public $cashToTubesSinceLastReset;
-    public $billsInSinceLastReset;
-    public $cashInSinceInitialization;
-    public $cashToCashBoxSinceInitialization;
-    public $cashToTubesSinceInitialization;
-    public $billsInSinceInitialization;
-    public $billsToRecyclerSinceLastReset;
-    public $billsToRecyclerSinceInitialization;
+    public $cashInSinceLastReset = 0;
+    public $cashToCashBoxSinceLastReset = 0;
+    public $cashToTubesSinceLastReset = 0;
+    public $billsInSinceLastReset = 0;
+    public $cashInSinceInitialization = 0;
+    public $cashToCashBoxSinceInitialization = 0;
+    public $cashToTubesSinceInitialization = 0;
+    public $billsInSinceInitialization = 0;
+    public $billsToRecyclerSinceLastReset = 0;
+    public $billsToRecyclerSinceInitialization = 0;
 
     public function __toString()
     {

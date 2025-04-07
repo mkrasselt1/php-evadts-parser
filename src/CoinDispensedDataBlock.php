@@ -15,7 +15,7 @@ class CoinDispensedDataBlock extends DataBlock
         7 => "coinOrigin",
     ];
 
-    public $coinValue = "";
+    public $coinValue = 0;
     public $amountOutLastReset = "";
     public $manualAmountLastReset = "";
     public $amountInInit = "";

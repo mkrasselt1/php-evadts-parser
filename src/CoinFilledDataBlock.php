@@ -13,7 +13,7 @@ class CoinFilledDataBlock extends DataBlock
         5 => "coinOrigin",
     ];
 
-    public $coinValue = "";
+    public $coinValue = 0;
     public $amountFilledLastRest = "";
     public $amountFilledInit = "";
     public $coinAge = "";
