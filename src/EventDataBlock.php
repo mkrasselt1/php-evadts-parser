@@ -55,21 +55,25 @@ class EventDataBlock extends DataBlock
             "OBH" => "waste collection full",
             "OCF" => "device off",
 
-            default => "unknown"
+            default => "unknown(" . $this->eventId . ")"
         };
         if (strlen($this->date) == 8) {
             $this->date = (\DateTimeImmutable::createFromFormat('Ymd', $this->date));
         } else {
             $this->date = (\DateTimeImmutable::createFromFormat('ymd', $this->date));
         }
-        $this->date = $this->date?->format("d-m-Y");
+        if (is_object($this->date)  && get_class($this->date) == "DateTimeImmutable") {
+            $this->date = $this->date?->format("d-m-Y");
+        }
 
         if (strlen($this->time) == 4) {
             $this->time = (\DateTimeImmutable::createFromFormat('Hi', $this->time));
         } else {
             $this->time = (\DateTimeImmutable::createFromFormat('His', $this->time));
         }
-        $this->time = $this->time->format("H:i:s");
+        if (is_object($this->time)  && get_class($this->time) == "DateTimeImmutable") {
+            $this->time = $this->time?->format("H:i:s");
+        }
 
         return "event $this->eventId on $this->date $this->time for $this->durationS seconds: $this->payload";
     }
