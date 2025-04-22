@@ -7,8 +7,8 @@ class ProductDataBlock extends DataBlock
     const ASSIGNMENT = [
         0 => "",
         1 => "productNumber",
-        2 => "name",
-        3 => "price",
+        2 => "price",
+        3 => "name",
         4 => "",
         5 => "",
         6 => "",
