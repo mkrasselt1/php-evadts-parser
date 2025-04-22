@@ -15,8 +15,8 @@ class EventDataBlock extends DataBlock
     ];
 
     public $eventId = "";
-    public $date = 0;
-    public $time = 0;
+    public $date = null;
+    public $time = null;
     public $durationS = 0;
     public $durationMs = 0;
     public $payload = "";
