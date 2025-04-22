@@ -98,7 +98,7 @@ class DataBlock implements DataBlockInterface
             foreach ($dataArray as $key => $value) {
                 $className =  get_called_class();
                 $propertyName = $className::ASSIGNMENT[$key] ?? "";
-                if (!empty($propertyName) && \property_exists($this, $propertyName))
+                if (!empty($propertyName) && !empty($value) && \property_exists($this, $propertyName))
                     $this->$propertyName = $value;
             }
         }
