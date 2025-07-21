@@ -837,16 +837,97 @@ class Parser
     {
         $name = strtolower($productName);
         
-        if (strpos($name, 'coffee') !== false || strpos($name, 'espresso') !== false || strpos($name, 'cappuccino') !== false) {
+        // Hot drinks - Heißgetränke
+        if (strpos($name, 'coffee') !== false || 
+            strpos($name, 'kaffee') !== false ||
+            strpos($name, 'espresso') !== false || 
+            strpos($name, 'cappuccino') !== false ||
+            strpos($name, 'choco') !== false ||
+            strpos($name, 'schokolade') !== false ||
+            strpos($name, 'chocolate') !== false ||
+            strpos($name, 'latte') !== false ||
+            strpos($name, 'macchiato') !== false ||
+            strpos($name, 'moccacino') !== false ||
+            strpos($name, 'mocca') !== false ||
+            strpos($name, 'mocha') !== false ||
+            strpos($name, 'cafe') !== false ||
+            strpos($name, 'café') !== false ||
+            strpos($name, 'tee') !== false ||
+            strpos($name, 'tea') !== false ||
+            strpos($name, 'chai') !== false ||
+            strpos($name, 'heiss') !== false ||
+            strpos($name, 'hot') !== false ||
+            strpos($name, 'warm') !== false ||
+            strpos($name, 'bohne') !== false ||
+            strpos($name, 'instant') !== false ||
+            strpos($name, 'americano') !== false ||
+            strpos($name, 'ristretto') !== false ||
+            strpos($name, 'lungo') !== false ||
+            strpos($name, 'flat white') !== false ||
+            strpos($name, 'cortado') !== false ||
+            strpos($name, 'schwarzer') !== false ||
+            strpos($name, 'weisser') !== false ||
+            strpos($name, 'weiss') !== false ||
+            strpos($name, 'schwarz') !== false) {
             return 'hot_drinks';
         }
-        if (strpos($name, 'cola') !== false || strpos($name, 'soda') !== false || strpos($name, 'water') !== false) {
+        
+        // Cold drinks - Kaltgetränke
+        if (strpos($name, 'cola') !== false || 
+            strpos($name, 'soda') !== false || 
+            strpos($name, 'water') !== false ||
+            strpos($name, 'wasser') !== false ||
+            strpos($name, 'juice') !== false ||
+            strpos($name, 'saft') !== false ||
+            strpos($name, 'limo') !== false ||
+            strpos($name, 'sprite') !== false ||
+            strpos($name, 'fanta') !== false ||
+            strpos($name, 'pepsi') !== false ||
+            strpos($name, 'energy') !== false ||
+            strpos($name, 'red bull') !== false ||
+            strpos($name, 'mineralwasser') !== false ||
+            strpos($name, 'softdrink') !== false ||
+            strpos($name, 'eistee') !== false ||
+            strpos($name, 'ice tea') !== false) {
             return 'cold_drinks';
         }
-        if (strpos($name, 'chip') !== false || strpos($name, 'snack') !== false || strpos($name, 'candy') !== false) {
+        
+        // Snacks - Snacks und Süßwaren
+        if (strpos($name, 'chip') !== false || 
+            strpos($name, 'snack') !== false || 
+            strpos($name, 'candy') !== false ||
+            strpos($name, 'süß') !== false ||
+            strpos($name, 'riegel') !== false ||
+            strpos($name, 'bar') !== false ||
+            strpos($name, 'keks') !== false ||
+            strpos($name, 'cookie') !== false ||
+            strpos($name, 'gummi') !== false ||
+            strpos($name, 'bonbon') !== false ||
+            strpos($name, 'nuts') !== false ||
+            strpos($name, 'nuss') !== false ||
+            strpos($name, 'cracker') !== false ||
+            strpos($name, 'pringles') !== false ||
+            strpos($name, 'kitkat') !== false ||
+            strpos($name, 'mars') !== false ||
+            strpos($name, 'snickers') !== false ||
+            strpos($name, 'haribo') !== false) {
             return 'snacks';
         }
-        if (strpos($name, 'sandwich') !== false || strpos($name, 'meal') !== false) {
+        
+        // Food - Hauptmahlzeiten und warme Speisen
+        if (strpos($name, 'sandwich') !== false || 
+            strpos($name, 'meal') !== false ||
+            strpos($name, 'burger') !== false ||
+            strpos($name, 'pizza') !== false ||
+            strpos($name, 'suppe') !== false ||
+            strpos($name, 'soup') !== false ||
+            strpos($name, 'pasta') !== false ||
+            strpos($name, 'nudel') !== false ||
+            strpos($name, 'salat') !== false ||
+            strpos($name, 'salad') !== false ||
+            strpos($name, 'wrap') !== false ||
+            strpos($name, 'brot') !== false ||
+            strpos($name, 'bread') !== false) {
             return 'food';
         }
         
