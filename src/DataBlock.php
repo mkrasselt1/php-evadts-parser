@@ -85,6 +85,7 @@ class DataBlock implements DataBlockInterface
             "CA11"      => CoinAcceptedDataBlock::class,
             "CA12"      => CoinDispensedDataBlock::class,
             "CA13"      => CoinFilledDataBlock::class,
+            "CA14"      => CoinAcceptedDataBlock::class,
             "CA15"      => CoinTubeLevelDataBlock::class,
             "CA16"      => DataBlock::class,
             "CA17"      => CoinTubeDataBlock::class,

@@ -334,7 +334,7 @@ class Parser
 
         foreach ($this->report->getBlocks() as $block) {
             if ($block instanceof CoinAcceptedDataBlock) {
-                $coinValue = (float)($block->coinValue ?? 0) / 100;
+                $rawCoinValue = (float)($block->coinValue ?? 0);
                 $amountInit = (int)($block->amountInInit ?? 0);
                 $amountReset = (int)($block->amountInLastReset ?? 0);
                 
@@ -342,6 +342,9 @@ class Parser
                 $totalAccepted = $amountReset >= $amountInit 
                     ? $amountReset - $amountInit 
                     : $amountInit; // Use init value when reset occurred
+                
+                // Convert coin value: 500 = 5 cent = 0.05 EUR
+                $coinValue = $rawCoinValue / 100;
                 
                 $cashboxData['coins'][] = [
                     'denomination' => $coinValue,
