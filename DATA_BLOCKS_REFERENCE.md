@@ -253,6 +253,11 @@ foreach ($report->blocks as $block) {
 }
 ```
 
+| MA1  | Machine audit information block         | Machine ID, checksums                           |
+| PA5  | Product/price audit block               | Product numbers, pricing audit data             |
+| EA5  | Extended event audit data block         | Extended event audit information                 |
+| EC2  | Error/control audit data block          | Error codes, control system audit data          |
+
 ## Block Type Mapping
 
 | Code | Class Name | Description |
@@ -275,10 +280,21 @@ foreach ($report->blocks as $block) {
 | DA1 | CashlessIDDataBlock | Cashless System ID |
 | DA2 | CashlessVendsDataBlock | Cashless Sales |
 | DA5 | CashlessDiscountsDataBlock | Cashless Discounts |
+| DB1 | DB1DataBlock | Database/Device Block Type 1 |
+| DB2 | DB2DataBlock | Database/Device Block Type 2 |
+| DB4 | DB4DataBlock | Database/Device Block Type 4 |
+| DB5 | DB5DataBlock | Database/Device Block Type 5 |
+| DB10 | DB10DataBlock | Database/Device Block Type 10 |
 | DXS | DXSDataBlock | Data Exchange Status |
+| DXE | DXEDataBlock | Data Exchange End |
 | EA1 | EventDataBlock | System Events |
 | EA2 | EventDetailsDataBlock | Event Details |
+| EA3 | EA3DataBlock | Event Audit Type 3 |
+| EA4 | EA4DataBlock | Event Audit Type 4 |
+| EA6 | EA6DataBlock | Extended Event Data |
+| EA7 | EA7DataBlock | Event Audit Type 7 |
 | FA1 | GatewayIDDataBlock | Gateway ID |
+| G85 | G85DataBlock | General/Manufacturer Data |
 | ID1 | VMCIDDataBlock | VMC Identification |
 | ID4 | CurrencyDataBlock | Currency Settings |
 | ID5 | TimeDataBlock | Date/Time Info |
@@ -290,7 +306,151 @@ foreach ($report->blocks as $block) {
 | PA3 | ProductTestVendsDataBlock | Test Vends |
 | PA4 | ProductFreeVendsDataBlock | Free Vends |
 | PA7 | ProductVendsNewDataBlock | Enhanced Sales Data |
+| PA8 | PA8DataBlock | Product Audit Data |
+| PP1 | PP1DataBlock | Product/Position Data |
+| SA2 | SA2DataBlock | Selection Audit Data |
+| SD1 | SD1DataBlock | System Data |
+| SE | SEDataBlock | Session End |
 | ST | STDataBlock | Status Data |
+| TA2 | TA2DataBlock | Total Audit Data |
+| TA3 | TA3DataBlock | Total Audit Data Type 3 |
+| TA5 | TA5DataBlock | Total Audit Data Type 5 |
 | VA1 | VendsPaidDataBlock | Paid Vends |
 | VA2 | VendsTestDataBlock | Test Vends |
 | VA3 | VendsFreeDataBlock | Free Vends |
+
+## Extended Data Blocks
+
+### SA2 - Selection Audit Data Block
+
+Contains individual product selection audit data.
+
+**Format:** `SA2*selectionNumber*numberSelections*field3`
+
+**Fields:**
+- `selectionNumber` (int) - Product/selection identifier
+- `numberSelections` (int) - Number of selections made
+- `field3` (string) - Additional data field
+
+**Example:** `SA2*1*992*`
+
+### EA6 - Extended Event Data Block
+
+Contains detailed event information with timestamps and descriptions.
+
+**Format:** `EA6*eventDate*eventTime*machineId*eventDescription`
+
+**Fields:**
+- `eventDate` (string) - Event date in YYYYMMDD format
+- `eventTime` (string) - Event time in HHMMSS format
+- `machineId` (string) - Machine or module identifier
+- `eventDescription` (string) - Human-readable event description
+
+**Example:** `EA6*20100111*232706*ANIKraftver*Clean Brewer`
+
+### TA2 - Total Audit Data Block
+
+Contains comprehensive audit totals and counters.
+
+**Format:** `TA2*totalValueInit*totalNumberInit*totalValueReset*totalNumberReset*field5*field6*field7*field8`
+
+**Fields:**
+- `totalValueInit` (int) - Initial total value
+- `totalNumberInit` (int) - Initial total count
+- `totalValueReset` (int) - Reset total value
+- `totalNumberReset` (int) - Reset total count
+- Additional fields for extended data
+
+**Example:** `TA2**0**0`
+
+### TA3 - Total Audit Data Block (Type 3)
+
+Contains audit totals for specific metrics.
+
+**Format:** `TA3*valueInit*valueReset`
+
+**Fields:**
+- `valueInit` (int) - Initial value
+- `valueReset` (int) - Reset value
+
+### TA5 - Total Audit Data Block (Type 5)
+
+Contains audit totals for specific metrics.
+
+**Format:** `TA5*valueInit*valueReset`
+
+**Fields:**
+- `valueInit` (int) - Initial value
+- `valueReset` (int) - Reset value
+
+### SD1 - System Data Block
+
+Contains system configuration and status information.
+
+**Format:** `SD1*systemData`
+
+**Fields:**
+- `systemData` (string) - System configuration data
+
+### G85 - General Data Block
+
+Contains manufacturer-specific or general data, often checksums.
+
+**Format:** `G85*generalData`
+
+**Fields:**
+- `generalData` (string) - General purpose data (often checksums)
+
+**Example:** `G85*B9AE`
+
+### SE - Session End Data Block
+
+Marks the end of a data session with control information.
+
+**Format:** `SE*recordCount*controlNumber`
+
+**Fields:**
+- `recordCount` (int) - Number of records in session
+- `controlNumber` (string) - Session control/sequence number
+
+**Example:** `SE*117*0001`
+
+### DXE - Data Exchange End Data Block
+
+Indicates the completion of data exchange.
+
+**Format:** `DXE*exchangeStatus*exchangeMode`
+
+**Fields:**
+- `exchangeStatus` (int) - Exchange completion status
+- `exchangeMode` (int) - Exchange mode identifier
+
+**Example:** `DXE*1*1`
+
+## Device-Specific Data Blocks
+
+### DB1, DB2, DB4, DB5, DB10 - Database/Device Data Blocks
+
+These blocks contain device or database-specific information that varies by manufacturer and implementation.
+
+### PP1 - Product/Position Data Block
+
+Contains product position and configuration data.
+
+**Format:** `PP1*productNumber*position*productName*...*field9`
+
+**Example:** `PP1*17*0*NO CUP ****9535*0`
+
+### PA8 - Product Audit Data Block
+
+Contains additional product audit information and counters.
+
+**Format:** `PA8*valueInit*valueReset*field3*field4`
+
+### EA3, EA4, EA7 - Event Audit Data Blocks
+
+Various event audit block types with different timestamp and counter formats:
+
+- **EA3**: Event audit with start/end timestamps
+- **EA4**: Event audit with single timestamp  
+- **EA7**: Event audit with counter information
