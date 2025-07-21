@@ -157,7 +157,11 @@ class Parser
                 $numberPaidInit = (int)($block->numberPaidInit ?? 0);
                 $numberPaidReset = (int)($block->numberPaidReset ?? 0);
                 $price = (float)($block->price ?? 0);
-                $salesCount = $numberPaidReset - $numberPaidInit;
+                
+                // Handle reset situation: if reset < init, treat as total sales since last reset
+                $salesCount = $numberPaidReset >= $numberPaidInit 
+                    ? $numberPaidReset - $numberPaidInit 
+                    : $numberPaidInit; // Use init value as total sales when reset occurred
                 
                 if ($salesCount > 0) {
                     $unitPrice = $price / 100;
@@ -243,7 +247,11 @@ class Parser
                 $price = (float)($block->price ?? 0);
                 $numberPaidInit = (int)($block->numberPaidInit ?? 0);
                 $numberPaidReset = (int)($block->numberPaidReset ?? 0);
-                $totalSales = $numberPaidReset - $numberPaidInit;
+                
+                // Handle reset situation: use the higher value as total sales
+                $totalSales = $numberPaidReset >= $numberPaidInit 
+                    ? $numberPaidReset - $numberPaidInit 
+                    : $numberPaidInit; // Use init as total when reset occurred
                 
                 $priceData[$productNumber] = [
                     'pricelist_id' => $priceList,
@@ -261,6 +269,8 @@ class Parser
             if ($block instanceof ProductDataBlock) {
                 $productId = $block->productNumber ?? 'unknown';
                 $blockPrice = (float)($block->price ?? 0);
+                
+                // Use price from PriceListVendsDataBlock if available, otherwise from ProductDataBlock
                 $price = isset($priceData[$productId]) ? $priceData[$productId]['price'] : $blockPrice / 100;
                 
                 $products[$productId] = [
@@ -268,7 +278,7 @@ class Parser
                     'name' => $block->name ?: "Product $productId",
                     'price' => $price,
                     'active' => $block->active,
-                    'category' => $this->determineProductCategory($block->name),
+                    'category' => $this->determineProductCategory($block->name ?: ''),
                     'stock_level' => 'unknown', // EVA-DTS doesn't typically include stock levels
                     'sales_data' => $priceData[$productId] ?? [
                         'total_sales' => 0,
@@ -309,14 +319,19 @@ class Parser
                 $coinValue = (float)($block->coinValue ?? 0) / 100;
                 $amountInit = (int)($block->amountInInit ?? 0);
                 $amountReset = (int)($block->amountInLastReset ?? 0);
-                $totalAccepted = $amountReset - $amountInit;
+                
+                // Handle reset situation: if reset < init, use init as total accepted
+                $totalAccepted = $amountReset >= $amountInit 
+                    ? $amountReset - $amountInit 
+                    : $amountInit; // Use init value when reset occurred
                 
                 $cashboxData['coins'][] = [
                     'denomination' => $coinValue,
                     'count_init' => $amountInit,
                     'count_reset' => $amountReset,
                     'total_accepted' => $totalAccepted,
-                    'total_value' => $totalAccepted * $coinValue
+                    'total_value' => $totalAccepted * $coinValue,
+                    'reset_occurred' => $amountReset < $amountInit
                 ];
                 $cashboxData['totals']['coin_value'] += $totalAccepted * $coinValue;
             }
