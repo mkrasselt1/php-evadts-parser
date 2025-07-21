@@ -870,65 +870,50 @@ class Parser
     }
 
     /**
-     * Categorize event type
+     * Get predefined EVA-DTS event definitions
+     * Delegates to EventCodes class
+     * 
+     * @return array Predefined event codes with categories and descriptions
+     */
+    public function getPredefinedEvents(): array
+    {
+        return EventCodes::getPredefinedEvents();
+    }
+
+    /**
+     * Categorize event type based on EVA-DTS predefined events
+     * Delegates to EventCodes class
      * 
      * @param string $eventId Event ID
      * @return string Event category
      */
     private function categorizeEvent(string $eventId): string
     {
-        $eventId = trim($eventId);
-        
-        if (strpos($eventId, 'EA') === 0) return 'coin';
-        if (strpos($eventId, 'EB') === 0) return 'cup';
-        if (strpos($eventId, 'EC') === 0) return 'control';
-        if (strpos($eventId, 'EG') === 0) return 'cabinet';
-        if (strpos($eventId, 'DEB') === 0) return 'debug';
-        if (strpos($eventId, 'PTV') === 0) return 'product_test';
-        if (strpos($eventId, 'PVD') === 0) return 'product_vend';
-        if (strpos($eventId, 'PVE') === 0) return 'product_error';
-        
-        return 'system';
+        return EventCodes::categorizeEvent($eventId);
     }
 
     /**
-     * Get event severity level
+     * Get event severity level based on EVA-DTS predefined events
+     * Delegates to EventCodes class
      * 
      * @param string $eventId Event ID
      * @return string Severity level
      */
     private function getEventSeverity(string $eventId): string
     {
-        $eventId = trim($eventId);
-        
-        if (strpos($eventId, 'ERROR') !== false) return 'error';
-        if (strpos($eventId, 'WARN') !== false) return 'warning';
-        if (strpos($eventId, 'DEB') === 0) return 'debug';
-        if (strpos($eventId, 'PVE') === 0) return 'error';
-        
-        return 'info';
+        return EventCodes::getEventSeverity($eventId);
     }
 
     /**
-     * Get event description
+     * Get event description based on EVA-DTS predefined events
+     * Delegates to EventCodes class
      * 
      * @param string $eventId Event ID
      * @return string Event description
      */
     private function getEventDescription(string $eventId): string
     {
-        $eventId = trim($eventId);
-        
-        $descriptions = [
-            'DEB' => 'Debug information',
-            'PTV' => 'Product test vend operation',
-            'PVD' => 'Product vend dispensed successfully',
-            'PVE' => 'Product vend error occurred',
-            'RESET' => 'System reset operation',
-            'KONF' => 'Configuration change'
-        ];
-        
-        return $descriptions[$eventId] ?? "Event: $eventId";
+        return EventCodes::getEventDescription($eventId);
     }
 
     /**
@@ -979,5 +964,40 @@ class Parser
         }
         
         return $recommendations;
+    }
+
+    /**
+     * Get known EVA-DTS manufacturer codes
+     * Delegates to Manufacturers class
+     * 
+     * @return array Manufacturer codes with details
+     */
+    public function getKnownManufacturers(): array
+    {
+        return Manufacturers::getAll();
+    }
+
+    /**
+     * Resolve manufacturer code to full information
+     * Delegates to Manufacturers class
+     * 
+     * @param string $code 3-letter manufacturer code
+     * @return array|null Manufacturer information or null if not found
+     */
+    public function resolveManufacturer(string $code): ?array
+    {
+        return Manufacturers::resolve($code);
+    }
+
+    /**
+     * Search manufacturers by name or country
+     * Delegates to Manufacturers class
+     * 
+     * @param string $search Search term (name or country)
+     * @return array Array of matching manufacturers with codes
+     */
+    public function searchManufacturers(string $search): array
+    {
+        return Manufacturers::search($search);
     }
 }
