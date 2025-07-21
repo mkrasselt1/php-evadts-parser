@@ -253,8 +253,26 @@ class Parser
                     ? $numberPaidReset - $numberPaidInit 
                     : $numberPaidInit; // Use init as total when reset occurred
                 
-                $priceData[$productNumber] = [
-                    'pricelist_id' => $priceList,
+                // Store all price lists for each product, but prioritize the main price list (0) or highest price
+                if (!isset($priceData[$productNumber]) || 
+                    $priceList == 0 || 
+                    $price > ($priceData[$productNumber]['price'] * 100)) {
+                    
+                    $priceData[$productNumber] = [
+                        'pricelist_id' => $priceList,
+                        'price' => $price / 100,
+                        'sales_init' => $numberPaidInit,
+                        'sales_reset' => $numberPaidReset,
+                        'total_sales' => $totalSales,
+                        'total_revenue' => ($totalSales * $price) / 100
+                    ];
+                }
+                
+                // Also store all price lists for reference
+                if (!isset($priceData[$productNumber]['all_pricelists'])) {
+                    $priceData[$productNumber]['all_pricelists'] = [];
+                }
+                $priceData[$productNumber]['all_pricelists'][$priceList] = [
                     'price' => $price / 100,
                     'sales_init' => $numberPaidInit,
                     'sales_reset' => $numberPaidReset,
