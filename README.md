@@ -1,11 +1,52 @@
-# PHP EvaDTS Parser
+# PHP EVA DTS Parser
 
-This project provides a parser for EvaDTS files, allowing you to extract and display product and device details in a human-readable format.
+A comprehensive PHP library for parsing EVA DTS (Electronic Vending Audit Data Transfer Standard) files from vending machines. This library converts machine audit data into structured, analyzable formats with built-in sales analysis and reporting capabilities.
 
 ## Features
 
-- Parses EvaDTS files.
-- Outputs product and device details in a readable format.
+- ✅ **Complete EVA DTS Support** - Parses all standard EVA DTS data block types
+- ✅ **Sales Analysis** - Built-in sales reporting and analysis functions
+- ✅ **Console Table Output** - Professional formatted table output for reports
+- ✅ **CLI Tool** - Command-line interface for quick analysis
+- ✅ **Extensible Architecture** - Easy to extend for custom data block types
+- ✅ **Well Documented** - Comprehensive API documentation and examples
+
+## Quick Start
+
+### Basic Usage
+
+```php
+<?php
+require_once 'vendor/autoload.php';
+
+use PeanutPay\PhpEvaDts\Parser;
+
+// Parse an EVA DTS file
+$parser = new Parser();
+if ($parser->load('machine_data.eva_dts')) {
+    $report = $parser->getReport();
+    
+    // Get formatted sales report
+    echo $report->generateSalesTableString();
+    
+    // Get structured data for analysis
+    $salesData = $report->generateSalesTable();
+}
+?>
+```
+
+### CLI Tool
+
+```bash
+# Generate formatted table report
+php bin/sales_report.php example/animo.eva_dts
+
+# Generate JSON output
+php bin/sales_report.php --format=json example/animo.eva_dts
+
+# Show help
+php bin/sales_report.php --help
+```
 
 ## Installation
 

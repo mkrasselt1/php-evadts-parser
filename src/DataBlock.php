@@ -2,22 +2,58 @@
 
 namespace PeanutPay\PhpEvaDts;
 
+/**
+ * Base DataBlock class for EVA DTS data parsing
+ * 
+ * This class serves as the foundation for all EVA DTS data block types.
+ * It provides parsing functionality and a factory method for creating
+ * specific data block instances based on the EVA DTS command type.
+ * 
+ * @package PeanutPay\PhpEvaDts
+ * @author Michael Krasselt <michael@peanutpay.de>
+ */
 class DataBlock implements DataBlockInterface
 {
-    const NONE                  = "";
+    /** @var string Empty constant for unused fields */
+    const NONE = "";
+    
+    /** @var array Field assignment mapping for this data block type */
     const ASSIGNMENT = [];
+    
     /**
-     * Creates a new DataBlock
-     * @param string $msg to be parsed
+     * Creates a new DataBlock instance
+     * 
+     * @param string $msg EVA DTS message string to be parsed
+     * 
+     * @example
+     * ```php
+     * $block = new DataBlock("PA1*1*Coffee*100*1");
+     * ```
      */
     public function __construct($msg = "")
     {
-        // echo self::class . "\r\n";
         if (!empty($msg)) {
             $this->parse($msg);
         }
     }
 
+    /**
+     * Factory method to create specific DataBlock instances
+     * 
+     * Analyzes the EVA DTS command type and returns the appropriate
+     * data block class instance for parsing the data.
+     * 
+     * @param string $dataString Raw EVA DTS data string
+     * @return DataBlockInterface|null The appropriate data block instance or null if unknown
+     * 
+     * @example
+     * ```php
+     * $block = DataBlock::create("PA1*1*Coffee*100*1");
+     * if ($block instanceof ProductDataBlock) {
+     *     echo "Product: " . $block->name;
+     * }
+     * ```
+     */
     public static function create($dataString): ?DataBlockInterface
     {
         $dataArray = \explode("*", $dataString);
@@ -81,9 +117,20 @@ class DataBlock implements DataBlockInterface
     }
 
     /**
-     * Parsing the EVA DTS message as star separated line
-     * @param string $dataString
+     * Parse an EVA DTS message string
+     * 
+     * Splits the star-separated EVA DTS line and stores the values
+     * in the appropriate object properties based on the ASSIGNMENT mapping.
+     * 
+     * @param string $dataString The EVA DTS data string to parse
      * @return void
+     * 
+     * @example
+     * ```php
+     * $block = new ProductDataBlock();
+     * $block->parse("PA1*1*Coffee*100*1");
+     * echo $block->name; // "Coffee"
+     * ```
      */
     public function parse($dataString)
     {
@@ -92,6 +139,15 @@ class DataBlock implements DataBlockInterface
         $this->store($dataArray);
     }
 
+    /**
+     * Store parsed data array values into object properties
+     * 
+     * Maps array values to object properties based on the ASSIGNMENT
+     * constant defined in each data block class.
+     * 
+     * @param array $dataArray Array of parsed values from EVA DTS string
+     * @return void
+     */
     public function store($dataArray)
     {
         if (is_array($dataArray)) {

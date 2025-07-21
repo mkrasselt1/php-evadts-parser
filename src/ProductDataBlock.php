@@ -2,8 +2,17 @@
 
 namespace PeanutPay\PhpEvaDts;
 
+/**
+ * Product Data Block (PA1) - Product Definition and Configuration
+ * 
+ * Contains product information including name, price, and availability status.
+ * This data block defines the products available in the vending machine.
+ * 
+ * @package PeanutPay\PhpEvaDts
+ */
 class ProductDataBlock extends DataBlock
 {
+    /** @var array Field assignment mapping for PA1 format */
     const ASSIGNMENT = [
         0 => "",
         1 => "productNumber",
@@ -15,6 +24,8 @@ class ProductDataBlock extends DataBlock
         7 => "active",
         8 => "",
     ];
+    
+    /** @var array Alternative field assignment mapping */
     const ASSIGNMENT_V2 = [
         0 => "",
         1 => "productNumber",
@@ -28,9 +39,16 @@ class ProductDataBlock extends DataBlock
     ];
     
 
+    /** @var int Product identifier/number */
     public $productNumber = 0;
+    
+    /** @var string Product name/description */
     public $name = "";
+    
+    /** @var int Product price in cents */
     public $price = 0;
+    
+    /** @var bool Whether the product is active/available */
     public $active = false;
 
     public function __toString()
