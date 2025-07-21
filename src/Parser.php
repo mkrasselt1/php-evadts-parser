@@ -154,16 +154,21 @@ class Parser
 
         foreach ($this->report->getBlocks() as $block) {
             if ($block instanceof PriceListVendsDataBlock) {
-                $salesCount = $block->numberPaidReset - $block->numberPaidInit;
+                $numberPaidInit = (int)($block->numberPaidInit ?? 0);
+                $numberPaidReset = (int)($block->numberPaidReset ?? 0);
+                $price = (float)($block->price ?? 0);
+                $salesCount = $numberPaidReset - $numberPaidInit;
+                
                 if ($salesCount > 0) {
+                    $unitPrice = $price / 100;
                     $salesData[] = [
                         'transaction_id' => $transactionId++,
                         'timestamp' => date('Y-m-d H:i:s'), // EVA-DTS doesn't provide exact timestamps
-                        'product_id' => $block->productNumber,
-                        'pricelist_id' => $block->priceList,
-                        'amount' => $block->price / 100,
+                        'product_id' => $block->productNumber ?? 'unknown',
+                        'pricelist_id' => $block->priceList ?? 0,
+                        'amount' => $unitPrice,
                         'quantity' => $salesCount,
-                        'total_value' => ($block->price / 100) * $salesCount,
+                        'total_value' => $unitPrice * $salesCount,
                         'transaction_type' => 'paid_vend',
                         'currency' => 'EUR', // Default, should be extracted from currency block
                         'payment_method' => 'unknown'
@@ -172,7 +177,10 @@ class Parser
             }
             
             if ($block instanceof ProductTestVendsDataBlock) {
-                $testVends = $block->numberTestsReset - $block->numberTestsInit;
+                $numberTestsInit = (int)($block->numberTestsInit ?? 0);
+                $numberTestsReset = (int)($block->numberTestsReset ?? 0);
+                $testVends = $numberTestsReset - $numberTestsInit;
+                
                 if ($testVends > 0) {
                     $salesData[] = [
                         'transaction_id' => $transactionId++,
@@ -189,7 +197,10 @@ class Parser
             }
 
             if ($block instanceof ProductFreeVendsDataBlock) {
-                $freeVends = $block->numberFreeReset - $block->numberFreeInit;
+                $numberFreeInit = (int)($block->numberFreeInit ?? 0);
+                $numberFreeReset = (int)($block->numberFreeReset ?? 0);
+                $freeVends = $numberFreeReset - $numberFreeInit;
+                
                 if ($freeVends > 0) {
                     $salesData[] = [
                         'transaction_id' => $transactionId++,
@@ -227,13 +238,20 @@ class Parser
         // Collect price data
         foreach ($this->report->getBlocks() as $block) {
             if ($block instanceof PriceListVendsDataBlock) {
-                $priceData[$block->productNumber] = [
-                    'pricelist_id' => $block->priceList,
-                    'price' => $block->price / 100,
-                    'sales_init' => $block->numberPaidInit,
-                    'sales_reset' => $block->numberPaidReset,
-                    'total_sales' => $block->numberPaidReset - $block->numberPaidInit,
-                    'total_revenue' => (($block->numberPaidReset - $block->numberPaidInit) * $block->price) / 100
+                $productNumber = $block->productNumber ?? 'unknown';
+                $priceList = (int)($block->priceList ?? 0);
+                $price = (float)($block->price ?? 0);
+                $numberPaidInit = (int)($block->numberPaidInit ?? 0);
+                $numberPaidReset = (int)($block->numberPaidReset ?? 0);
+                $totalSales = $numberPaidReset - $numberPaidInit;
+                
+                $priceData[$productNumber] = [
+                    'pricelist_id' => $priceList,
+                    'price' => $price / 100,
+                    'sales_init' => $numberPaidInit,
+                    'sales_reset' => $numberPaidReset,
+                    'total_sales' => $totalSales,
+                    'total_revenue' => ($totalSales * $price) / 100
                 ];
             }
         }
@@ -241,8 +259,9 @@ class Parser
         // Collect product data
         foreach ($this->report->getBlocks() as $block) {
             if ($block instanceof ProductDataBlock) {
-                $productId = $block->productNumber;
-                $price = isset($priceData[$productId]) ? $priceData[$productId]['price'] : $block->price / 100;
+                $productId = $block->productNumber ?? 'unknown';
+                $blockPrice = (float)($block->price ?? 0);
+                $price = isset($priceData[$productId]) ? $priceData[$productId]['price'] : $blockPrice / 100;
                 
                 $products[$productId] = [
                     'product_id' => $productId,
@@ -287,36 +306,51 @@ class Parser
 
         foreach ($this->report->getBlocks() as $block) {
             if ($block instanceof CoinAcceptedDataBlock) {
-                $coinValue = $block->coinValue / 100;
+                $coinValue = (float)($block->coinValue ?? 0) / 100;
+                $amountInit = (int)($block->amountInInit ?? 0);
+                $amountReset = (int)($block->amountInLastReset ?? 0);
+                $totalAccepted = $amountReset - $amountInit;
+                
                 $cashboxData['coins'][] = [
                     'denomination' => $coinValue,
-                    'count_init' => $block->amountInInit ?? 0,
-                    'count_reset' => $block->amountInLastReset ?? 0,
-                    'total_accepted' => ($block->amountInLastReset ?? 0) - ($block->amountInInit ?? 0),
-                    'total_value' => (($block->amountInLastReset ?? 0) - ($block->amountInInit ?? 0)) * $coinValue
+                    'count_init' => $amountInit,
+                    'count_reset' => $amountReset,
+                    'total_accepted' => $totalAccepted,
+                    'total_value' => $totalAccepted * $coinValue
                 ];
-                $cashboxData['totals']['coin_value'] += (($block->amountInLastReset ?? 0) - ($block->amountInInit ?? 0)) * $coinValue;
+                $cashboxData['totals']['coin_value'] += $totalAccepted * $coinValue;
             }
 
             if ($block instanceof CoinTubeLevelDataBlock) {
+                $tubeNumber = (int)($block->tubeNumber ?? 0);
+                $coinValue = (float)($block->coinValue ?? 0) / 100;
+                $coinCount = (int)($block->coinCount ?? 0);
+                
                 $cashboxData['tube_levels'][] = [
-                    'tube_number' => $block->tubeNumber ?? 0,
-                    'coin_value' => ($block->coinValue ?? 0) / 100,
-                    'count' => $block->coinCount ?? 0,
+                    'tube_number' => $tubeNumber,
+                    'coin_value' => $coinValue,
+                    'count' => $coinCount,
                     'tube_status' => $block->tubeStatus ?? 'unknown',
-                    'total_value' => (($block->coinCount ?? 0) * ($block->coinValue ?? 0)) / 100
+                    'total_value' => $coinCount * $coinValue
                 ];
             }
 
             if ($block instanceof CashReportDataBlock) {
+                $cashInit = (float)($block->cashInit ?? 0) / 100;
+                $cashReset = (float)($block->cashReset ?? 0) / 100;
+                $tubeValueInit = (float)($block->tubeValueInit ?? 0) / 100;
+                $tubeValueReset = (float)($block->tubeValueReset ?? 0) / 100;
+                $billValueInit = (float)($block->billValueInit ?? 0) / 100;
+                $billValueReset = (float)($block->billValueReset ?? 0) / 100;
+                
                 $cashboxData['cash_audit'] = [
-                    'cash_init' => ($block->cashInit ?? 0) / 100,
-                    'cash_reset' => ($block->cashReset ?? 0) / 100,
-                    'cash_difference' => (($block->cashReset ?? 0) - ($block->cashInit ?? 0)) / 100,
-                    'tube_value_init' => ($block->tubeValueInit ?? 0) / 100,
-                    'tube_value_reset' => ($block->tubeValueReset ?? 0) / 100,
-                    'bill_value_init' => ($block->billValueInit ?? 0) / 100,
-                    'bill_value_reset' => ($block->billValueReset ?? 0) / 100
+                    'cash_init' => $cashInit,
+                    'cash_reset' => $cashReset,
+                    'cash_difference' => $cashReset - $cashInit,
+                    'tube_value_init' => $tubeValueInit,
+                    'tube_value_reset' => $tubeValueReset,
+                    'bill_value_init' => $billValueInit,
+                    'bill_value_reset' => $billValueReset
                 ];
             }
         }
