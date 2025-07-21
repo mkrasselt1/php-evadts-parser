@@ -23,30 +23,12 @@ class EventDataBlock extends DataBlock
 
     public function __toString()
     {
-        $this->eventId = match (\substr($this->eventId, 0, 2)) {
-            "EA" => "coin",
-            "EB" => "cup",
-            "EC" => "control system",
-            "ED" => "hot drinks",
-            "EE" => "brewer system",
-            "EF" => "water",
-            "EG" => "cabinet",
-            "EH" => "cold drinks",
-            "EI" => "communications",
-            "EJ" => "snack/can/bottle",
-            "EK" => "cashless",
-            "EL" => "product",
-            "EM" => "microwave",
-            "EN" => "bill validator",
-            "EO" => "refrigeration",
-            "OA" => "request",
-            "OB" => "service",
-            "OC" => "customer",
-            "OD" => "return visits",
-            "OE" => "machine history",
-            "OF" => "cash collection",
-
-            //rhea specific
+        $trimmedEventId = trim($this->eventId);
+        $this->eventId = match ($trimmedEventId) {
+            "DEB" => "debug",
+            "PTV" => "product test vend",
+            "PVD" => "product vend dispensed", 
+            "PVE" => "product vend error",
             "EC_ON" => "device on",
             "OAJ" => "brewer cleansing",
             "OAJ_BRW" => "rinsing brewer",
@@ -54,8 +36,32 @@ class EventDataBlock extends DataBlock
             "OAK" => "filter change",
             "OBH" => "waste collection full",
             "OCF" => "device off",
-
-            default => "unknown(" . $this->eventId . ")"
+            "KONF" => "configuration",
+            "RESET" => "system reset",
+            default => match (\substr($trimmedEventId, 0, 2)) {
+                "EA" => "coin",
+                "EB" => "cup",
+                "EC" => "control system",
+                "ED" => "hot drinks",
+                "EE" => "brewer system",
+                "EF" => "water",
+                "EG" => "cabinet",
+                "EH" => "cold drinks",
+                "EI" => "communications",
+                "EJ" => "snack/can/bottle",
+                "EK" => "cashless",
+                "EL" => "product",
+                "EM" => "microwave",
+                "EN" => "bill validator",
+                "EO" => "refrigeration",
+                "OA" => "request",
+                "OB" => "service",
+                "OC" => "customer",
+                "OD" => "return visits",
+                "OE" => "machine history",
+                "OF" => "cash collection",
+                default => "unknown(" . $this->eventId . ")"
+            }
         };
         if (strlen($this->date) == 8) {
             $this->date = (\DateTimeImmutable::createFromFormat('Ymd', $this->date));
