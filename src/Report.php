@@ -24,6 +24,16 @@ class Report
     }
 
     /**
+     * Get all data blocks in this report
+     * 
+     * @return DataBlock[] Array of data blocks
+     */
+    public function getBlocks(): array
+    {
+        return $this->blocks;
+    }
+
+    /**
      * Generates a structured array/table containing all pricelists, products and their sales data
      * @return array
      */
