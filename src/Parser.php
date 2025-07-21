@@ -254,9 +254,12 @@ class Parser
                     : $numberPaidInit; // Use init as total when reset occurred
                 
                 // Store all price lists for each product, but prioritize the main price list (0) or highest price
+                // Compare prices in the same unit (both in Cent)
+                $existingPriceInCent = isset($priceData[$productNumber]) ? ($priceData[$productNumber]['price'] * 100) : 0;
+                
                 if (!isset($priceData[$productNumber]) || 
                     $priceList == 0 || 
-                    $price > ($priceData[$productNumber]['price'] * 100)) {
+                    $price > $existingPriceInCent) {
                     
                     $priceData[$productNumber] = [
                         'pricelist_id' => $priceList,
