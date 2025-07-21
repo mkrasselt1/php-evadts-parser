@@ -693,6 +693,28 @@ class Parser
         ];
     }
 
+    /**
+     * Get product report in legacy format for backward compatibility
+     * 
+     * @return array Product report in format expected by old HTML templates
+     */
+    public function getProductReportLegacy(): array
+    {
+        $productReport = $this->generateProductReport();
+        $legacyFormat = [];
+        
+        foreach ($productReport['product_performance'] ?? [] as $product) {
+            $legacyFormat[] = [
+                'name' => $product['name'],
+                'quantity' => (int)$product['total_quantity_sold'],
+                'revenue' => (int)($product['total_revenue'] * 100), // Convert to Cent
+                'avg_price' => (int)($product['price'] * 100) // Convert to Cent
+            ];
+        }
+        
+        return $legacyFormat;
+    }
+
     // =======================================
     // HELPER METHODS
     // =======================================

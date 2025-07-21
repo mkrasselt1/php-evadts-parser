@@ -48,6 +48,58 @@ php bin/sales_report.php --format=json example/animo.eva_dts
 php bin/sales_report.php --help
 ```
 
+### Advanced Usage with New Parser Methods
+
+```php
+<?php
+use PeanutPay\PhpEvaDts\Parser;
+
+$parser = new Parser();
+$parser->load('machine_data.eva_dts');
+
+// Get all data tables at once
+$tables = $parser->getTables();
+
+// Individual data extraction
+$salesData = $parser->getSalesData();       // Sales transactions
+$productData = $parser->getProductData();   // Product information
+$cashboxData = $parser->getCashboxData();   // Cash/coin management
+$auditData = $parser->getAuditData();       // System audit trail
+$eventData = $parser->getEventData();       // Events and errors
+
+// Generate comprehensive reports
+$salesReport = $parser->generateSalesReport();     // Sales analysis
+$productReport = $parser->generateProductReport(); // Product performance
+$errorReport = $parser->getErrorReport();          // Data validation
+
+// Legacy compatibility for old templates
+$legacyFormat = $parser->getProductReportLegacy();
+?>
+```
+
+## 📁 Examples and Testing
+
+The `example/` directory contains comprehensive examples and test scripts:
+
+- **Test Scripts**: Complete parser method testing and validation
+- **Sample Data**: Real EVA DTS files from various vending machine types
+- **HTML Templates**: Examples for web integration
+- **Analysis Tools**: Detailed data structure analysis
+
+See [`example/README.md`](example/README.md) for detailed usage examples.
+
+```bash
+# Test all parser methods
+cd example/
+php test_all_parser_methods.php
+
+# Analyze specific files
+php detailed_file_analysis.php
+
+# Test legacy compatibility
+php legacy_compatibility_test.php
+```
+
 ## Installation
 
 Make sure you have [Composer](https://getcomposer.org/) installed. Then, require the package in your project:

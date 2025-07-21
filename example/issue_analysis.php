@@ -1,11 +1,11 @@
 <?php
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PeanutPay\PhpEvaDts\Parser;
 
 // Detailed analysis of specific issues found
-$testFile = __DIR__ . '/example/2025-06-18-11-27-ACTECH LUCE Zero.0 Bohne 2.txt';
+$testFile = __DIR__ . '/2025-06-18-11-27-ACTECH LUCE Zero.0 Bohne 2.txt';
 
 echo "=== DETAILED ANALYSIS OF POTENTIAL ISSUES ===\n\n";
 
