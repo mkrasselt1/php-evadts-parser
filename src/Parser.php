@@ -336,28 +336,52 @@ class Parser
         ];
 
         foreach ($this->report->getBlocks() as $block) {
+            // Handle CA14 - Bills Accepted
+            if ($block instanceof BillAcceptedDataBlock) {
+                $rawBillValue = (float)($block->billValue ?? 0);
+                $billsInSinceReset = (int)($block->billsInSinceReset ?? 0);
+                $billsInSinceInit = (int)($block->billsInSinceInit ?? 0);
+                
+                // For bills: use billsInSinceReset as the count since last reset
+                $totalAccepted = $billsInSinceReset;
+                
+                // Convert bill value: 500 = 5 EUR
+                $billValue = $rawBillValue / 100;
+                
+                $cashboxData['bills'][] = [
+                    'denomination' => $billValue,
+                    'count_since_init' => $billsInSinceInit,
+                    'count_since_reset' => $billsInSinceReset,
+                    'to_stacker_since_reset' => (int)($block->billsToStackerSinceReset ?? 0),
+                    'to_stacker_since_init' => (int)($block->billsToStackerSinceInit ?? 0),
+                    'total_accepted' => $totalAccepted,
+                    'total_value' => $totalAccepted * $billValue
+                ];
+                $cashboxData['totals']['bill_value'] += $totalAccepted * $billValue;
+            }
+
+            // Handle CA11 - Coins Accepted
             if ($block instanceof CoinAcceptedDataBlock) {
                 $rawCoinValue = (float)($block->coinValue ?? 0);
-                $amountInit = (int)($block->amountInInit ?? 0);
-                $amountReset = (int)($block->amountInLastReset ?? 0);
+                $coinsAcceptedSinceReset = (int)($block->coinsAcceptedSinceReset ?? 0);
+                $coinsAcceptedSinceInit = (int)($block->coinsAcceptedSinceInit ?? 0);
+                $coinsToCashboxSinceReset = (int)($block->coinsToCashboxSinceReset ?? 0);
                 
-                // Handle reset situation: if reset < init, use init as total accepted
-                $totalAccepted = $amountReset >= $amountInit 
-                    ? $amountReset - $amountInit 
-                    : $amountInit; // Use init value when reset occurred
-                
-                // Convert coin value: 500 = 5 cent = 0.05 EUR
+                // Convert coin value: 50 = 0.50 EUR
                 $coinValue = $rawCoinValue / 100;
                 
                 $cashboxData['coins'][] = [
                     'denomination' => $coinValue,
-                    'count_init' => $amountInit,
-                    'count_reset' => $amountReset,
-                    'total_accepted' => $totalAccepted,
-                    'total_value' => $totalAccepted * $coinValue,
-                    'reset_occurred' => $amountReset < $amountInit
+                    'count_since_init' => $coinsAcceptedSinceInit,
+                    'count_since_reset' => $coinsAcceptedSinceReset,
+                    'to_cashbox_since_reset' => $coinsToCashboxSinceReset,
+                    'to_cashbox_since_init' => (int)($block->coinsToCashboxSinceInit ?? 0),
+                    'to_tubes_since_reset' => (int)($block->coinsToTubesSinceReset ?? 0),
+                    'to_tubes_since_init' => (int)($block->coinsToTubesSinceInit ?? 0),
+                    'total_accepted' => $coinsAcceptedSinceReset,
+                    'total_value' => $coinsAcceptedSinceReset * $coinValue
                 ];
-                $cashboxData['totals']['coin_value'] += $totalAccepted * $coinValue;
+                $cashboxData['totals']['coin_value'] += $coinsAcceptedSinceReset * $coinValue;
             }
 
             if ($block instanceof CoinTubeLevelDataBlock) {
