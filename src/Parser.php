@@ -127,7 +127,7 @@ class Parser
 
         $tables = [
             'sales' => $this->getSalesData(),
-            'products' => $this->getProductData(), 
+            'products' => $this->getProductData(),
             'cashbox' => $this->getCashboxData(),
             'audit' => $this->getAuditData(),
             'events' => $this->getEventData(),
@@ -157,12 +157,12 @@ class Parser
                 $numberPaidInit = (int)($block->numberPaidInit ?? 0);
                 $numberPaidReset = (int)($block->numberPaidReset ?? 0);
                 $price = (float)($block->price ?? 0);
-                
+
                 // Handle reset situation: if reset < init, treat as total sales since last reset
-                $salesCount = $numberPaidReset >= $numberPaidInit 
-                    ? $numberPaidReset - $numberPaidInit 
+                $salesCount = $numberPaidReset >= $numberPaidInit
+                    ? $numberPaidReset - $numberPaidInit
                     : $numberPaidInit; // Use init value as total sales when reset occurred
-                
+
                 if ($salesCount > 0) {
                     $unitPrice = $price / 100;
                     $salesData[] = [
@@ -179,12 +179,12 @@ class Parser
                     ];
                 }
             }
-            
+
             if ($block instanceof ProductTestVendsDataBlock) {
                 $numberTestsInit = (int)($block->numberTestsInit ?? 0);
                 $numberTestsReset = (int)($block->numberTestsReset ?? 0);
-                $testVends = $numberTestsReset - $numberTestsInit;
-                
+                $testVends = $numberTestsInit;
+
                 if ($testVends > 0) {
                     $salesData[] = [
                         'transaction_id' => $transactionId++,
@@ -203,8 +203,8 @@ class Parser
             if ($block instanceof ProductFreeVendsDataBlock) {
                 $numberFreeInit = (int)($block->numberFreeInit ?? 0);
                 $numberFreeReset = (int)($block->numberFreeReset ?? 0);
-                $freeVends = $numberFreeReset - $numberFreeInit;
-                
+                $freeVends = $numberFreeInit;
+
                 if ($freeVends > 0) {
                     $salesData[] = [
                         'transaction_id' => $transactionId++,
@@ -247,36 +247,38 @@ class Parser
                 $price = (float)($block->price ?? 0);
                 $numberPaidInit = (int)($block->numberPaidInit ?? 0);
                 $numberPaidReset = (int)($block->numberPaidReset ?? 0);
-                
+
                 // Handle reset situation: use the higher value as total sales
-                $totalSales = $numberPaidReset >= $numberPaidInit 
-                    ? $numberPaidReset - $numberPaidInit 
+                $totalSales = $numberPaidReset >= $numberPaidInit
+                    ? $numberPaidReset - $numberPaidInit
                     : $numberPaidInit; // Use init as total when reset occurred
-                
+
                 // Store all price lists for each product, but prioritize the main price list (0) or highest price
                 // Compare prices in the same unit (both in Cent)
                 $existingPriceInCent = isset($priceData[$productNumber]) ? ($priceData[$productNumber]['price'] * 100) : 0;
-                
-                if (!isset($priceData[$productNumber]) || 
-                    $priceList == 0 || 
-                    $price > $existingPriceInCent) {
-                    
+
+                if (
+                    !isset($priceData[$productNumber]) ||
+                    $priceList == 0 ||
+                    $price > $existingPriceInCent
+                ) {
+
                     $priceData[$productNumber] = [
                         'pricelist_id' => $priceList,
-                        'price' => $price / 100,
+                        'price' => round($price / 100, 2),
                         'sales_init' => $numberPaidInit,
                         'sales_reset' => $numberPaidReset,
                         'total_sales' => $totalSales,
                         'total_revenue' => ($totalSales * $price) / 100
                     ];
                 }
-                
+
                 // Also store all price lists for reference
                 if (!isset($priceData[$productNumber]['all_pricelists'])) {
                     $priceData[$productNumber]['all_pricelists'] = [];
                 }
                 $priceData[$productNumber]['all_pricelists'][$priceList] = [
-                    'price' => $price / 100,
+                    'price' => round($price / 100, 2),
                     'sales_init' => $numberPaidInit,
                     'sales_reset' => $numberPaidReset,
                     'total_sales' => $totalSales,
@@ -290,10 +292,10 @@ class Parser
             if ($block instanceof ProductDataBlock) {
                 $productId = $block->productNumber ?? 'unknown';
                 $blockPrice = (float)($block->price ?? 0);
-                
+
                 // Use price from PriceListVendsDataBlock if available, otherwise from ProductDataBlock
                 $price = isset($priceData[$productId]) ? $priceData[$productId]['price'] : $blockPrice / 100;
-                
+
                 $products[$productId] = [
                     'product_id' => $productId,
                     'name' => $block->name ?: "Product $productId",
@@ -341,13 +343,13 @@ class Parser
                 $rawBillValue = (float)($block->billValue ?? 0);
                 $billsInSinceReset = (int)($block->billsInSinceReset ?? 0);
                 $billsInSinceInit = (int)($block->billsInSinceInit ?? 0);
-                
+
                 // For bills: use billsInSinceReset as the count since last reset
                 $totalAccepted = $billsInSinceReset;
-                
+
                 // Convert bill value: 500 = 5 EUR
                 $billValue = $rawBillValue / 100;
-                
+
                 $cashboxData['bills'][] = [
                     'denomination' => $billValue,
                     'count_since_init' => $billsInSinceInit,
@@ -366,10 +368,10 @@ class Parser
                 $coinsAcceptedSinceReset = (int)($block->coinsAcceptedSinceReset ?? 0);
                 $coinsAcceptedSinceInit = (int)($block->coinsAcceptedSinceInit ?? 0);
                 $coinsToCashboxSinceReset = (int)($block->coinsToCashboxSinceReset ?? 0);
-                
+
                 // Convert coin value: 50 = 0.50 EUR
                 $coinValue = $rawCoinValue / 100;
-                
+
                 $cashboxData['coins'][] = [
                     'denomination' => $coinValue,
                     'count_since_init' => $coinsAcceptedSinceInit,
@@ -388,7 +390,7 @@ class Parser
                 $tubeNumber = (int)($block->tubeNumber ?? 0);
                 $coinValue = (float)($block->coinValue ?? 0) / 100;
                 $coinCount = (int)($block->coinCount ?? 0);
-                
+
                 $cashboxData['tube_levels'][] = [
                     'tube_number' => $tubeNumber,
                     'coin_value' => $coinValue,
@@ -405,7 +407,7 @@ class Parser
                 $tubeValueReset = (float)($block->tubeValueReset ?? 0) / 100;
                 $billValueInit = (float)($block->billValueInit ?? 0) / 100;
                 $billValueReset = (float)($block->billValueReset ?? 0) / 100;
-                
+
                 $cashboxData['cash_audit'] = [
                     'cash_init' => $cashInit,
                     'cash_reset' => $cashReset,
@@ -419,7 +421,7 @@ class Parser
         }
 
         $cashboxData['totals']['total_cash'] = $cashboxData['totals']['coin_value'] + $cashboxData['totals']['bill_value'];
-        
+
         return $cashboxData;
     }
 
@@ -458,8 +460,10 @@ class Parser
                 ];
             }
 
-            if (method_exists($block, 'getField1') && 
-                (strpos(get_class($block), 'TA') === strrpos(get_class($block), 'TA'))) {
+            if (
+                method_exists($block, 'getField1') &&
+                (strpos(get_class($block), 'TA') === strrpos(get_class($block), 'TA'))
+            ) {
                 $auditData['time_audit'][] = [
                     'block_type' => get_class($block),
                     'data_block' => method_exists($block, '__toString') ? $block->__toString() : 'N/A',
@@ -533,7 +537,7 @@ class Parser
 
         $salesData = $this->getSalesData();
         $productData = $this->getProductData();
-        
+
         $report = [
             'summary' => [
                 'total_transactions' => count($salesData),
@@ -547,9 +551,24 @@ class Parser
                 ]
             ],
             'transaction_types' => [
-                'paid_vends' => count(array_filter($salesData, fn($s) => $s['transaction_type'] === 'paid_vend')),
-                'test_vends' => count(array_filter($salesData, fn($s) => $s['transaction_type'] === 'test_vend')),
-                'free_vends' => count(array_filter($salesData, fn($s) => $s['transaction_type'] === 'free_vend'))
+                'paid_vends' => array_sum(
+                    array_column(
+                        array_filter($salesData, fn($s) => $s['transaction_type'] === 'paid_vend'),
+                        'quantity'
+                    )
+                ),
+                'test_vends' => array_sum(
+                    array_column(
+                        array_filter($salesData, fn($s) => $s['transaction_type'] === 'test_vend'),
+                        'quantity'
+                    )
+                ),
+                'free_vends' => array_sum(
+                    array_column(
+                        array_filter($salesData, fn($s) => $s['transaction_type'] === 'free_vend'),
+                        'quantity'
+                    )
+                )
             ],
             'revenue_by_product' => [],
             'peak_sales_analysis' => [
@@ -645,7 +664,7 @@ class Parser
         foreach ($categories as $category => $count) {
             $categoryProducts = array_filter($productData, fn($p) => $p['category'] === $category);
             $categoryRevenue = array_sum(array_column($categoryProducts, 'sales_data.total_revenue'));
-            
+
             $report['category_analysis'][] = [
                 'category' => $category,
                 'product_count' => $count,
@@ -675,11 +694,11 @@ class Parser
         $dataIntegrityIssues = [];
 
         $blocks = $this->report->getBlocks();
-        
+
         // Check for data integrity issues
         $productIds = [];
         $pricelistData = [];
-        
+
         foreach ($blocks as $block) {
             if ($block instanceof ProductDataBlock) {
                 $productIds[] = $block->productNumber;
@@ -750,7 +769,7 @@ class Parser
     {
         $productReport = $this->generateProductReport();
         $legacyFormat = [];
-        
+
         foreach ($productReport['product_performance'] ?? [] as $product) {
             $legacyFormat[] = [
                 'name' => $product['name'],
@@ -759,7 +778,7 @@ class Parser
                 'avg_price' => (int)($product['price'] * 100) // Convert to Cent
             ];
         }
-        
+
         return $legacyFormat;
     }
 
@@ -866,11 +885,12 @@ class Parser
     private function determineProductCategory(string $productName): string
     {
         $name = strtolower($productName);
-        
+
         // Hot drinks - Heißgetränke
-        if (strpos($name, 'coffee') !== false || 
+        if (
+            strpos($name, 'coffee') !== false ||
             strpos($name, 'kaffee') !== false ||
-            strpos($name, 'espresso') !== false || 
+            strpos($name, 'espresso') !== false ||
             strpos($name, 'cappuccino') !== false ||
             strpos($name, 'choco') !== false ||
             strpos($name, 'schokolade') !== false ||
@@ -898,13 +918,15 @@ class Parser
             strpos($name, 'schwarzer') !== false ||
             strpos($name, 'weisser') !== false ||
             strpos($name, 'weiss') !== false ||
-            strpos($name, 'schwarz') !== false) {
+            strpos($name, 'schwarz') !== false
+        ) {
             return 'hot_drinks';
         }
-        
+
         // Cold drinks - Kaltgetränke
-        if (strpos($name, 'cola') !== false || 
-            strpos($name, 'soda') !== false || 
+        if (
+            strpos($name, 'cola') !== false ||
+            strpos($name, 'soda') !== false ||
             strpos($name, 'water') !== false ||
             strpos($name, 'wasser') !== false ||
             strpos($name, 'juice') !== false ||
@@ -918,13 +940,15 @@ class Parser
             strpos($name, 'mineralwasser') !== false ||
             strpos($name, 'softdrink') !== false ||
             strpos($name, 'eistee') !== false ||
-            strpos($name, 'ice tea') !== false) {
+            strpos($name, 'ice tea') !== false
+        ) {
             return 'cold_drinks';
         }
-        
+
         // Snacks - Snacks und Süßwaren
-        if (strpos($name, 'chip') !== false || 
-            strpos($name, 'snack') !== false || 
+        if (
+            strpos($name, 'chip') !== false ||
+            strpos($name, 'snack') !== false ||
             strpos($name, 'candy') !== false ||
             strpos($name, 'süß') !== false ||
             strpos($name, 'riegel') !== false ||
@@ -940,12 +964,14 @@ class Parser
             strpos($name, 'kitkat') !== false ||
             strpos($name, 'mars') !== false ||
             strpos($name, 'snickers') !== false ||
-            strpos($name, 'haribo') !== false) {
+            strpos($name, 'haribo') !== false
+        ) {
             return 'snacks';
         }
-        
+
         // Food - Hauptmahlzeiten und warme Speisen
-        if (strpos($name, 'sandwich') !== false || 
+        if (
+            strpos($name, 'sandwich') !== false ||
             strpos($name, 'meal') !== false ||
             strpos($name, 'burger') !== false ||
             strpos($name, 'pizza') !== false ||
@@ -957,10 +983,11 @@ class Parser
             strpos($name, 'salad') !== false ||
             strpos($name, 'wrap') !== false ||
             strpos($name, 'brot') !== false ||
-            strpos($name, 'bread') !== false) {
+            strpos($name, 'bread') !== false
+        ) {
             return 'food';
         }
-        
+
         return 'other';
     }
 
@@ -976,25 +1003,25 @@ class Parser
         if (empty($date) || empty($time)) {
             return date('Y-m-d H:i:s');
         }
-        
+
         // Handle different date formats
         if (strlen($date) == 8) {
             $dateObj = \DateTimeImmutable::createFromFormat('Ymd', $date);
         } else {
             $dateObj = \DateTimeImmutable::createFromFormat('ymd', $date);
         }
-        
+
         // Handle different time formats
         if (strlen($time) == 4) {
             $timeObj = \DateTimeImmutable::createFromFormat('Hi', $time);
         } else {
             $timeObj = \DateTimeImmutable::createFromFormat('His', $time);
         }
-        
+
         if ($dateObj && $timeObj) {
             return $dateObj->format('Y-m-d') . ' ' . $timeObj->format('H:i:s');
         }
-        
+
         return date('Y-m-d H:i:s');
     }
 
@@ -1056,11 +1083,11 @@ class Parser
     private function calculateDataHealth(array $errors, array $warnings, array $dataIssues): string
     {
         $totalIssues = count($errors) + count($warnings) + count($dataIssues);
-        
+
         if ($totalIssues === 0) return 'excellent';
         if ($totalIssues <= 2) return 'good';
         if ($totalIssues <= 5) return 'fair';
-        
+
         return 'poor';
     }
 
@@ -1075,23 +1102,23 @@ class Parser
     private function generateRecommendations(array $errors, array $warnings, array $dataIssues): array
     {
         $recommendations = [];
-        
+
         if (count($dataIssues) > 0) {
             $recommendations[] = 'Review data integrity issues and verify machine configuration';
         }
-        
+
         if (count($warnings) > 2) {
             $recommendations[] = 'Address missing data relationships between products and pricing';
         }
-        
+
         if (count($errors) > 0) {
             $recommendations[] = 'Critical errors found - immediate attention required';
         }
-        
+
         if (empty($recommendations)) {
             $recommendations[] = 'Data quality is good - no immediate action required';
         }
-        
+
         return $recommendations;
     }
 
