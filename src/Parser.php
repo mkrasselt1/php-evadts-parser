@@ -239,7 +239,7 @@ class Parser
         $priceData = [];
         $salesData = [];
 
-        // Collect price data
+        // Collect price data - aggregate across ALL pricelists
         foreach ($this->report->getBlocks() as $block) {
             if ($block instanceof PriceListVendsDataBlock) {
                 $productNumber = $block->productNumber ?? 'unknown';
@@ -253,30 +253,31 @@ class Parser
                     ? $numberPaidReset - $numberPaidInit
                     : $numberPaidInit; // Use init as total when reset occurred
 
-                // Store all price lists for each product, but prioritize the main price list (0) or highest price
-                // Compare prices in the same unit (both in Cent)
-                $existingPriceInCent = isset($priceData[$productNumber]) ? ($priceData[$productNumber]['price'] * 100) : 0;
-
-                if (
-                    !isset($priceData[$productNumber]) ||
-                    $priceList == 0 ||
-                    $price > $existingPriceInCent
-                ) {
-
+                // Initialize product data if not exists
+                if (!isset($priceData[$productNumber])) {
                     $priceData[$productNumber] = [
                         'pricelist_id' => $priceList,
                         'price' => round($price / 100, 2),
-                        'sales_init' => $numberPaidInit,
-                        'sales_reset' => $numberPaidReset,
-                        'total_sales' => $totalSales,
-                        'total_revenue' => ($totalSales * $price) / 100
+                        'sales_init' => 0,
+                        'sales_reset' => 0,
+                        'total_sales' => 0,
+                        'total_revenue' => 0,
+                        'all_pricelists' => []
                     ];
                 }
 
-                // Also store all price lists for reference
-                if (!isset($priceData[$productNumber]['all_pricelists'])) {
-                    $priceData[$productNumber]['all_pricelists'] = [];
+                // ADD sales from this pricelist to totals (don't overwrite!)
+                $priceData[$productNumber]['total_sales'] += $totalSales;
+                $priceData[$productNumber]['total_revenue'] += ($totalSales * $price) / 100;
+
+                // Update price if this one is higher or is from main pricelist (0)
+                $existingPriceInCent = $priceData[$productNumber]['price'] * 100;
+                if ($priceList == 0 || $price > $existingPriceInCent) {
+                    $priceData[$productNumber]['price'] = round($price / 100, 2);
+                    $priceData[$productNumber]['pricelist_id'] = $priceList;
                 }
+
+                // Store individual pricelist data for detailed analysis
                 $priceData[$productNumber]['all_pricelists'][$priceList] = [
                     'price' => round($price / 100, 2),
                     'sales_init' => $numberPaidInit,
