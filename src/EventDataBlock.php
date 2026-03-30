@@ -24,10 +24,10 @@ class EventDataBlock extends DataBlock
     public function __toString()
     {
         $trimmedEventId = trim($this->eventId);
-        $this->eventId = match ($trimmedEventId) {
+        $eventLabel = match ($trimmedEventId) {
             "DEB" => "debug",
             "PTV" => "product test vend",
-            "PVD" => "product vend dispensed", 
+            "PVD" => "product vend dispensed",
             "PVE" => "product vend error",
             "EC_ON" => "device on",
             "OAJ" => "brewer cleansing",
@@ -60,27 +60,34 @@ class EventDataBlock extends DataBlock
                 "OD" => "return visits",
                 "OE" => "machine history",
                 "OF" => "cash collection",
-                default => "unknown(" . $this->eventId . ")"
+                default => "unknown(" . $trimmedEventId . ")"
             }
         };
-        if (strlen($this->date) == 8) {
-            $this->date = (\DateTimeImmutable::createFromFormat('Ymd', $this->date));
-        } else {
-            $this->date = (\DateTimeImmutable::createFromFormat('ymd', $this->date));
-        }
-        if (is_object($this->date)  && get_class($this->date) == "DateTimeImmutable") {
-            $this->date = $this->date?->format("d-m-Y");
+
+        $dateFormatted = $this->date;
+        if (is_string($this->date) && !empty($this->date)) {
+            if (strlen($this->date) == 8) {
+                $dateObj = \DateTimeImmutable::createFromFormat('Ymd', $this->date);
+            } else {
+                $dateObj = \DateTimeImmutable::createFromFormat('ymd', $this->date);
+            }
+            if ($dateObj) {
+                $dateFormatted = $dateObj->format("d-m-Y");
+            }
         }
 
-        if (strlen($this->time) == 4) {
-            $this->time = (\DateTimeImmutable::createFromFormat('Hi', $this->time));
-        } else {
-            $this->time = (\DateTimeImmutable::createFromFormat('His', $this->time));
-        }
-        if (is_object($this->time)  && get_class($this->time) == "DateTimeImmutable") {
-            $this->time = $this->time?->format("H:i:s");
+        $timeFormatted = $this->time;
+        if (is_string($this->time) && !empty($this->time)) {
+            if (strlen($this->time) == 4) {
+                $timeObj = \DateTimeImmutable::createFromFormat('Hi', $this->time);
+            } else {
+                $timeObj = \DateTimeImmutable::createFromFormat('His', $this->time);
+            }
+            if ($timeObj) {
+                $timeFormatted = $timeObj->format("H:i:s");
+            }
         }
 
-        return "event $this->eventId on $this->date $this->time for $this->durationS seconds: $this->payload";
+        return "event $eventLabel on $dateFormatted $timeFormatted for $this->durationS seconds: $this->payload";
     }
 }

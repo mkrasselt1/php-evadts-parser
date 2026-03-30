@@ -106,7 +106,7 @@ class Report
      */
     private function getShortClassName(string $className): string
     {
-        $parts = \explode('\\\\', $className);
+        $parts = \explode('\\', $className);
         return (string)\end($parts);
     }
 

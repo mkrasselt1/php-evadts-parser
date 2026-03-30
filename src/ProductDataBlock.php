@@ -53,6 +53,6 @@ class ProductDataBlock extends DataBlock
 
     public function __toString()
     {
-        return "product $this->productNumber names $this->name priced $this->price is " . (!$this->active ? "active" : "inactive") . "\n\r";
+        return "product $this->productNumber names $this->name priced $this->price is " . ($this->active ? "active" : "inactive") . "\n\r";
     }
 }

@@ -2,41 +2,39 @@
 namespace PeanutPay\PhpEvaDts;
 
 /**
- * PA5 Data Block Class
- * Product/price audit block
+ * PA5 - Product Discount Vends
+ *
+ * Per-product discount vend counters (number and value)
+ * since initialisation and since last reset.
+ *
+ * @package PeanutPay\PhpEvaDts
  */
 class PA5DataBlock extends DataBlock implements DataBlockInterface
 {
     const ASSIGNMENT = [
-        'cmdType',
-        'productNumber',
-        'field2',
-        'field3',
-        'field4'
+        0 => '',
+        1 => 'numberDiscountVendsInit',
+        2 => 'valueDiscountVendsInit',
+        3 => 'numberDiscountVendsReset',
+        4 => 'valueDiscountVendsReset',
     ];
 
-    public function __construct($data = null)
-    {
-        parent::__construct($data);
-    }
+    /** @var int Number of discount paid vends since initialisation */
+    public $numberDiscountVendsInit = 0;
 
-    public function getProductNumber()
-    {
-        return $this->data[1] ?? '';
-    }
+    /** @var int Value of discount paid vends since initialisation (cents) */
+    public $valueDiscountVendsInit = 0;
 
-    public function getField2()
-    {
-        return $this->data[2] ?? '';
-    }
+    /** @var int Number of discount paid vends since last reset */
+    public $numberDiscountVendsReset = 0;
 
-    public function getField3()
-    {
-        return $this->data[3] ?? '';
-    }
+    /** @var int Value of discount paid vends since last reset (cents) */
+    public $valueDiscountVendsReset = 0;
 
-    public function getField4()
+    public function __toString()
     {
-        return $this->data[4] ?? '';
+        return "PA5 Discount Vends: " .
+            $this->numberDiscountVendsInit . "x / " . ($this->valueDiscountVendsInit / 100) . " EUR since init, " .
+            $this->numberDiscountVendsReset . "x / " . ($this->valueDiscountVendsReset / 100) . " EUR since reset";
     }
 }

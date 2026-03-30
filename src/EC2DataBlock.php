@@ -2,53 +2,47 @@
 namespace PeanutPay\PhpEvaDts;
 
 /**
- * EC2 Data Block Class
- * Error/control audit data block
+ * EC2 - Configuration Change Record
+ *
+ * Records configuration changes made to the vending machine,
+ * including when, what was changed, and by whom.
+ *
+ * @package PeanutPay\PhpEvaDts
  */
 class EC2DataBlock extends DataBlock implements DataBlockInterface
 {
     const ASSIGNMENT = [
-        'cmdType',
-        'errorCode',
-        'field2',
-        'field3',
-        'field4',
-        'field5',
-        'field6'
+        0 => '',
+        1 => 'configurationId',
+        2 => 'configurationDate',
+        3 => 'configurationTime',
+        4 => 'previousValue',
+        5 => 'newValue',
+        6 => 'operatorId',
     ];
 
-    public function __construct($data = null)
-    {
-        parent::__construct($data);
-    }
+    /** @var string Configuration identifier */
+    public $configurationId = '';
 
-    public function getErrorCode()
-    {
-        return $this->data[1] ?? '';
-    }
+    /** @var string Date of configuration change (YYMMDD or YYYYMMDD) */
+    public $configurationDate = '';
 
-    public function getField2()
-    {
-        return $this->data[2] ?? '';
-    }
+    /** @var string Time of configuration change (HHmm or HHmmss) */
+    public $configurationTime = '';
 
-    public function getField3()
-    {
-        return $this->data[3] ?? '';
-    }
+    /** @var string Previous configuration value */
+    public $previousValue = '';
 
-    public function getField4()
-    {
-        return $this->data[4] ?? '';
-    }
+    /** @var string New configuration value */
+    public $newValue = '';
 
-    public function getField5()
-    {
-        return $this->data[5] ?? '';
-    }
+    /** @var string Operator who made the change */
+    public $operatorId = '';
 
-    public function getField6()
+    public function __toString()
     {
-        return $this->data[6] ?? '';
+        return "EC2 Config Change [$this->configurationId]: " .
+            "$this->previousValue -> $this->newValue on $this->configurationDate $this->configurationTime" .
+            (!empty($this->operatorId) ? " by $this->operatorId" : '');
     }
 }

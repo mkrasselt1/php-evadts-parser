@@ -148,6 +148,9 @@ class Parser
         return [
             'products' => $this->getProductMetaBlock(),
             'events' => $this->getEventList(),
+            'sales_audit' => $this->getSalesAuditMetaBlock(),
+            'machine' => $this->getMachineMetaBlock(),
+            'cashbox' => $this->getCashboxMetaBlock(),
         ];
     }
 
@@ -375,6 +378,402 @@ class Parser
         }
 
         return $events;
+    }
+
+    /**
+     * Build a sales audit meta block combining all TA blocks.
+     *
+     * Aggregates TA2 (cash), TA3 (cash-to-machine), TA4 (token/coupon),
+     * TA5 (cashless 1), TA6 (cashless 2) into one overview.
+     *
+     * @return array
+     */
+    public function getSalesAuditMetaBlock(): array
+    {
+        if (!$this->report) {
+            return ['headers' => [], 'rows' => [], 'items' => []];
+        }
+
+        $audit = [
+            'cash_sales' => null,
+            'cash_to_machine' => null,
+            'token_coupon_sales' => null,
+            'cashless1_sales' => null,
+            'cashless2_sales' => null,
+            'totals' => [
+                'total_value_init' => 0,
+                'total_value_reset' => 0,
+                'total_number_init' => 0,
+                'total_number_reset' => 0,
+            ],
+        ];
+
+        foreach ($this->report->getBlocks() as $block) {
+            if ($block instanceof TA2DataBlock) {
+                $entry = [
+                    'type' => 'cash_sales',
+                    'label' => 'Cash Sales (TA2)',
+                    'value_init' => (int)($block->valueCashSalesInit ?? 0),
+                    'number_init' => (int)($block->numberCashSalesInit ?? 0),
+                    'value_reset' => (int)($block->valueCashSalesReset ?? 0),
+                    'number_reset' => (int)($block->numberCashSalesReset ?? 0),
+                    'value_init_eur' => (int)($block->valueCashSalesInit ?? 0) / 100,
+                    'value_reset_eur' => (int)($block->valueCashSalesReset ?? 0) / 100,
+                    'discount_value_init' => (int)($block->valueDiscountCashSalesInit ?? 0),
+                    'discount_number_init' => (int)($block->numberDiscountCashSalesInit ?? 0),
+                    'discount_value_reset' => (int)($block->valueDiscountCashSalesReset ?? 0),
+                    'discount_number_reset' => (int)($block->numberDiscountCashSalesReset ?? 0),
+                ];
+                $audit['cash_sales'] = $entry;
+                $audit['totals']['total_value_init'] += $entry['value_init'];
+                $audit['totals']['total_value_reset'] += $entry['value_reset'];
+                $audit['totals']['total_number_init'] += $entry['number_init'];
+                $audit['totals']['total_number_reset'] += $entry['number_reset'];
+            }
+
+            if ($block instanceof TA3DataBlock) {
+                $audit['cash_to_machine'] = [
+                    'type' => 'cash_to_machine',
+                    'label' => 'Cash to Machine (TA3)',
+                    'value_init' => (int)($block->valueCashToMachineInit ?? 0),
+                    'value_reset' => (int)($block->valueCashToMachineReset ?? 0),
+                    'value_init_eur' => (int)($block->valueCashToMachineInit ?? 0) / 100,
+                    'value_reset_eur' => (int)($block->valueCashToMachineReset ?? 0) / 100,
+                ];
+            }
+
+            if ($block instanceof TA4DataBlock) {
+                $entry = [
+                    'type' => 'token_coupon_sales',
+                    'label' => 'Token/Coupon Sales (TA4)',
+                    'value_init' => (int)($block->valueTokenSalesInit ?? 0),
+                    'number_init' => (int)($block->numberTokenSalesInit ?? 0),
+                    'value_reset' => (int)($block->valueTokenSalesReset ?? 0),
+                    'number_reset' => (int)($block->numberTokenSalesReset ?? 0),
+                    'value_init_eur' => (int)($block->valueTokenSalesInit ?? 0) / 100,
+                    'value_reset_eur' => (int)($block->valueTokenSalesReset ?? 0) / 100,
+                    'value_token_value_init' => (int)($block->valueValueTokenSalesInit ?? 0),
+                    'value_token_number_init' => (int)($block->numberValueTokenSalesInit ?? 0),
+                    'value_token_value_reset' => (int)($block->valueValueTokenSalesReset ?? 0),
+                    'value_token_number_reset' => (int)($block->numberValueTokenSalesReset ?? 0),
+                ];
+                $audit['token_coupon_sales'] = $entry;
+                $audit['totals']['total_value_init'] += $entry['value_init'];
+                $audit['totals']['total_value_reset'] += $entry['value_reset'];
+                $audit['totals']['total_number_init'] += $entry['number_init'];
+                $audit['totals']['total_number_reset'] += $entry['number_reset'];
+            }
+
+            if ($block instanceof TA5DataBlock) {
+                $entry = [
+                    'type' => 'cashless1_sales',
+                    'label' => 'Cashless 1 Sales (TA5)',
+                    'value_init' => (int)($block->valueCashless1SalesInit ?? 0),
+                    'value_reset' => (int)($block->valueCashless1SalesReset ?? 0),
+                    'value_init_eur' => (int)($block->valueCashless1SalesInit ?? 0) / 100,
+                    'value_reset_eur' => (int)($block->valueCashless1SalesReset ?? 0) / 100,
+                ];
+                $audit['cashless1_sales'] = $entry;
+                $audit['totals']['total_value_init'] += $entry['value_init'];
+                $audit['totals']['total_value_reset'] += $entry['value_reset'];
+            }
+
+            if ($block instanceof TA6DataBlock) {
+                $entry = [
+                    'type' => 'cashless2_sales',
+                    'label' => 'Cashless 2 Sales (TA6)',
+                    'value_init' => (int)($block->valueCashless2SalesInit ?? 0),
+                    'number_init' => (int)($block->numberCashless2SalesInit ?? 0),
+                    'value_reset' => (int)($block->valueCashless2SalesReset ?? 0),
+                    'number_reset' => (int)($block->numberCashless2SalesReset ?? 0),
+                    'value_init_eur' => (int)($block->valueCashless2SalesInit ?? 0) / 100,
+                    'value_reset_eur' => (int)($block->valueCashless2SalesReset ?? 0) / 100,
+                ];
+                $audit['cashless2_sales'] = $entry;
+                $audit['totals']['total_value_init'] += $entry['value_init'];
+                $audit['totals']['total_value_reset'] += $entry['value_reset'];
+                $audit['totals']['total_number_init'] += $entry['number_init'];
+                $audit['totals']['total_number_reset'] += $entry['number_reset'];
+            }
+        }
+
+        $audit['totals']['total_value_init_eur'] = $audit['totals']['total_value_init'] / 100;
+        $audit['totals']['total_value_reset_eur'] = $audit['totals']['total_value_reset'] / 100;
+
+        // Build table representation
+        $headers = ['type', 'label', 'value_init_eur', 'number_init', 'value_reset_eur', 'number_reset'];
+        $rows = [];
+        foreach (['cash_sales', 'token_coupon_sales', 'cashless1_sales', 'cashless2_sales'] as $key) {
+            if ($audit[$key] !== null) {
+                $rows[] = [
+                    $audit[$key]['type'],
+                    $audit[$key]['label'],
+                    number_format($audit[$key]['value_init_eur'] ?? 0, 2),
+                    $audit[$key]['number_init'] ?? '-',
+                    number_format($audit[$key]['value_reset_eur'] ?? 0, 2),
+                    $audit[$key]['number_reset'] ?? '-',
+                ];
+            }
+        }
+        $rows[] = [
+            'total', 'TOTAL',
+            number_format($audit['totals']['total_value_init_eur'], 2),
+            $audit['totals']['total_number_init'],
+            number_format($audit['totals']['total_value_reset_eur'], 2),
+            $audit['totals']['total_number_reset'],
+        ];
+
+        return [
+            'headers' => $headers,
+            'rows' => $rows,
+            'items' => $audit,
+        ];
+    }
+
+    /**
+     * Build a machine info meta block combining identification blocks.
+     *
+     * Aggregates ID1 (VMC), CB1 (Control Board), ID4 (Currency),
+     * AM1 (Audit Module), MA5 (Machine Data) into one overview.
+     *
+     * @return array
+     */
+    public function getMachineMetaBlock(): array
+    {
+        if (!$this->report) {
+            return ['headers' => [], 'rows' => [], 'items' => []];
+        }
+
+        $machine = [
+            'vmc' => null,
+            'control_board' => null,
+            'currency' => null,
+            'audit_module' => null,
+            'coin_mechanism' => null,
+            'bill_validator' => null,
+            'cashless_devices' => [],
+            'machine_data' => [],
+        ];
+
+        foreach ($this->report->getBlocks() as $block) {
+            if ($block instanceof VMCIDDataBlock) {
+                $machine['vmc'] = [
+                    'component' => 'VMC (ID1)',
+                    'serial_number' => $block->serialNumber ?? '',
+                    'model' => $block->modelNumber ?? '',
+                    'build_standard' => $block->buildStandard ?? '',
+                    'location' => $block->location ?? '',
+                    'asset_number' => $block->assetNumber ?? '',
+                ];
+            }
+
+            if ($block instanceof ControlBoardDataBlock) {
+                $machine['control_board'] = [
+                    'component' => 'Control Board (CB1)',
+                    'serial_number' => $block->serialNumber ?? '',
+                    'model' => $block->modelNumber ?? '',
+                    'build_standard' => $block->buildStandard ?? '',
+                ];
+            }
+
+            if ($block instanceof CurrencyDataBlock) {
+                $machine['currency'] = [
+                    'component' => 'Currency (ID4)',
+                    'currency_code' => $block->currencyCode ?? '',
+                    'currency_numeric' => $block->currencyCodeNumeric ?? '',
+                    'decimals' => $block->decimals ?? '',
+                ];
+            }
+
+            if ($block instanceof AuditModuleDataBlock) {
+                $machine['audit_module'] = [
+                    'component' => 'Audit Module (AM1)',
+                    'serial_number' => $block->serialNumber ?? '',
+                    'model' => $block->modelNumber ?? '',
+                    'software_revision' => $block->softwareRevision ?? '',
+                    'asset_number' => $block->assetNumber ?? '',
+                ];
+            }
+
+            if ($block instanceof CoinIDDataBlock) {
+                $machine['coin_mechanism'] = [
+                    'component' => 'Coin Mechanism (CA1)',
+                    'serial_number' => $block->serialNumber ?? '',
+                    'model' => $block->modelNumber ?? '',
+                    'software_version' => $block->softwareVersion ?? '',
+                ];
+            }
+
+            if ($block instanceof BillIDDataBlock) {
+                $machine['bill_validator'] = [
+                    'component' => 'Bill Validator (BA1)',
+                    'serial_number' => $block->serialNumber ?? '',
+                    'model' => $block->modelNumber ?? '',
+                    'software_version' => $block->softwareVersion ?? '',
+                ];
+            }
+
+            if ($block instanceof CashlessIDDataBlock) {
+                $machine['cashless_devices'][] = [
+                    'component' => 'Cashless Device (DA1/CA10)',
+                    'serial_number' => $block->serialNumber ?? '',
+                    'model' => $block->modelNumber ?? '',
+                    'software_version' => $block->softwareVersion ?? '',
+                    'asset_number' => $block->assetNumber ?? '',
+                ];
+            }
+
+            if ($block instanceof MachineDataBlock) {
+                $machine['machine_data'][] = [
+                    'component' => 'Machine Data (MA5)',
+                    'identifier' => $block->blockIdentifier ?? '',
+                    'data' => $block->data ?? '',
+                    'optional1' => $block->optionalData1 ?? '',
+                    'optional2' => $block->optionalData2 ?? '',
+                ];
+            }
+        }
+
+        // Build table representation
+        $headers = ['component', 'model', 'serial_number', 'version'];
+        $rows = [];
+
+        if ($machine['vmc']) {
+            $rows[] = [$machine['vmc']['component'], $machine['vmc']['model'], $machine['vmc']['serial_number'], $machine['vmc']['build_standard']];
+        }
+        if ($machine['control_board']) {
+            $rows[] = [$machine['control_board']['component'], $machine['control_board']['model'], $machine['control_board']['serial_number'], $machine['control_board']['build_standard']];
+        }
+        if ($machine['audit_module']) {
+            $rows[] = [$machine['audit_module']['component'], $machine['audit_module']['model'], $machine['audit_module']['serial_number'], $machine['audit_module']['software_revision']];
+        }
+        if ($machine['coin_mechanism']) {
+            $rows[] = [$machine['coin_mechanism']['component'], $machine['coin_mechanism']['model'], $machine['coin_mechanism']['serial_number'], $machine['coin_mechanism']['software_version']];
+        }
+        if ($machine['bill_validator']) {
+            $rows[] = [$machine['bill_validator']['component'], $machine['bill_validator']['model'], $machine['bill_validator']['serial_number'], $machine['bill_validator']['software_version']];
+        }
+        foreach ($machine['cashless_devices'] as $cl) {
+            $rows[] = [$cl['component'], $cl['model'], $cl['serial_number'], $cl['software_version']];
+        }
+
+        return [
+            'headers' => $headers,
+            'rows' => $rows,
+            'items' => $machine,
+        ];
+    }
+
+    /**
+     * Build a cashbox meta block combining cash audit data.
+     *
+     * Aggregates CA3 (Cash Report), CA11 (Coins Accepted),
+     * CA14 (Bills Accepted) into one overview.
+     *
+     * @return array
+     */
+    public function getCashboxMetaBlock(): array
+    {
+        if (!$this->report) {
+            return ['headers' => [], 'rows' => [], 'items' => []];
+        }
+
+        $cashbox = [
+            'cash_report' => null,
+            'coins' => [],
+            'bills' => [],
+            'totals' => [
+                'total_cash_in_init' => 0,
+                'total_cash_in_reset' => 0,
+                'total_coin_value_reset' => 0,
+                'total_bill_value_reset' => 0,
+            ],
+        ];
+
+        foreach ($this->report->getBlocks() as $block) {
+            if ($block instanceof CashReportDataBlock) {
+                $cashbox['cash_report'] = [
+                    'cash_in_init' => (int)($block->cashInSinceInitialization ?? 0) / 100,
+                    'cash_in_reset' => (int)($block->cashInSinceLastReset ?? 0) / 100,
+                    'cash_to_cashbox_init' => (int)($block->cashToCashBoxSinceInitialization ?? 0) / 100,
+                    'cash_to_cashbox_reset' => (int)($block->cashToCashBoxSinceLastReset ?? 0) / 100,
+                    'cash_to_tubes_init' => (int)($block->cashToTubesSinceInitialization ?? 0) / 100,
+                    'cash_to_tubes_reset' => (int)($block->cashToTubesSinceLastReset ?? 0) / 100,
+                    'bills_in_init' => (int)($block->billsInSinceInitialization ?? 0) / 100,
+                    'bills_in_reset' => (int)($block->billsInSinceLastReset ?? 0) / 100,
+                    'bills_to_recycler_init' => (int)($block->billsToRecyclerSinceInitialization ?? 0) / 100,
+                    'bills_to_recycler_reset' => (int)($block->billsToRecyclerSinceLastReset ?? 0) / 100,
+                    'bills_dispensed_init' => (int)($block->billsDispensedSinceInitialization ?? 0) / 100,
+                    'bills_dispensed_reset' => (int)($block->billsDispensedSinceLastReset ?? 0) / 100,
+                ];
+                $cashbox['totals']['total_cash_in_init'] = $cashbox['cash_report']['cash_in_init'];
+                $cashbox['totals']['total_cash_in_reset'] = $cashbox['cash_report']['cash_in_reset'];
+            }
+
+            if ($block instanceof CoinAcceptedDataBlock) {
+                $coinValue = (float)($block->coinValue ?? 0) / 100;
+                $countReset = (int)($block->coinsAcceptedSinceReset ?? 0);
+                $countInit = (int)($block->coinsAcceptedSinceInit ?? 0);
+
+                $cashbox['coins'][] = [
+                    'denomination' => $coinValue,
+                    'count_init' => $countInit,
+                    'count_reset' => $countReset,
+                    'value_init' => $countInit * $coinValue,
+                    'value_reset' => $countReset * $coinValue,
+                    'to_cashbox_reset' => (int)($block->coinsToCashboxSinceReset ?? 0),
+                    'to_tubes_reset' => (int)($block->coinsToTubesSinceReset ?? 0),
+                ];
+                $cashbox['totals']['total_coin_value_reset'] += $countReset * $coinValue;
+            }
+
+            if ($block instanceof BillAcceptedDataBlock) {
+                $billValue = (float)($block->billValue ?? 0) / 100;
+                $countReset = (int)($block->billsInSinceReset ?? 0);
+                $countInit = (int)($block->billsInSinceInit ?? 0);
+
+                $cashbox['bills'][] = [
+                    'denomination' => $billValue,
+                    'count_init' => $countInit,
+                    'count_reset' => $countReset,
+                    'value_init' => $countInit * $billValue,
+                    'value_reset' => $countReset * $billValue,
+                    'to_stacker_reset' => (int)($block->billsToStackerSinceReset ?? 0),
+                ];
+                $cashbox['totals']['total_bill_value_reset'] += $countReset * $billValue;
+            }
+        }
+
+        // Build table representation
+        $headers = ['type', 'denomination', 'count_reset', 'value_reset', 'count_init', 'value_init'];
+        $rows = [];
+
+        foreach ($cashbox['coins'] as $coin) {
+            $rows[] = [
+                'coin',
+                number_format($coin['denomination'], 2) . ' EUR',
+                $coin['count_reset'],
+                number_format($coin['value_reset'], 2),
+                $coin['count_init'],
+                number_format($coin['value_init'], 2),
+            ];
+        }
+        foreach ($cashbox['bills'] as $bill) {
+            $rows[] = [
+                'bill',
+                number_format($bill['denomination'], 2) . ' EUR',
+                $bill['count_reset'],
+                number_format($bill['value_reset'], 2),
+                $bill['count_init'],
+                number_format($bill['value_init'], 2),
+            ];
+        }
+
+        return [
+            'headers' => $headers,
+            'rows' => $rows,
+            'items' => $cashbox,
+        ];
     }
 
     /**
@@ -675,21 +1074,23 @@ class Parser
             }
 
             if ($block instanceof CashReportDataBlock) {
-                $cashInit = (float)($block->cashInit ?? 0) / 100;
-                $cashReset = (float)($block->cashReset ?? 0) / 100;
-                $tubeValueInit = (float)($block->tubeValueInit ?? 0) / 100;
-                $tubeValueReset = (float)($block->tubeValueReset ?? 0) / 100;
-                $billValueInit = (float)($block->billValueInit ?? 0) / 100;
-                $billValueReset = (float)($block->billValueReset ?? 0) / 100;
+                $cashInInit = (float)($block->cashInSinceInitialization ?? 0) / 100;
+                $cashInReset = (float)($block->cashInSinceLastReset ?? 0) / 100;
+                $cashToTubesInit = (float)($block->cashToTubesSinceInitialization ?? 0) / 100;
+                $cashToTubesReset = (float)($block->cashToTubesSinceLastReset ?? 0) / 100;
+                $billsInInit = (float)($block->billsInSinceInitialization ?? 0) / 100;
+                $billsInReset = (float)($block->billsInSinceLastReset ?? 0) / 100;
 
                 $cashboxData['cash_audit'] = [
-                    'cash_init' => $cashInit,
-                    'cash_reset' => $cashReset,
-                    'cash_difference' => $cashReset - $cashInit,
-                    'tube_value_init' => $tubeValueInit,
-                    'tube_value_reset' => $tubeValueReset,
-                    'bill_value_init' => $billValueInit,
-                    'bill_value_reset' => $billValueReset
+                    'cash_in_init' => $cashInInit,
+                    'cash_in_reset' => $cashInReset,
+                    'cash_difference' => $cashInReset - $cashInInit,
+                    'cash_to_cashbox_init' => (float)($block->cashToCashBoxSinceInitialization ?? 0) / 100,
+                    'cash_to_cashbox_reset' => (float)($block->cashToCashBoxSinceLastReset ?? 0) / 100,
+                    'tube_value_init' => $cashToTubesInit,
+                    'tube_value_reset' => $cashToTubesReset,
+                    'bill_value_init' => $billsInInit,
+                    'bill_value_reset' => $billsInReset,
                 ];
             }
         }
@@ -720,7 +1121,9 @@ class Parser
         foreach ($this->report->getBlocks() as $block) {
             if ($block instanceof AuditModuleDataBlock) {
                 $auditData['machine_audit'][] = [
-                    'module_data' => $block->moduleData ?? 'N/A',
+                    'model' => $block->modelNumber ?? 'N/A',
+                    'serial' => $block->serialNumber ?? 'N/A',
+                    'software_revision' => $block->softwareRevision ?? 'N/A',
                     'timestamp' => date('Y-m-d H:i:s')
                 ];
             }
@@ -1082,23 +1485,32 @@ class Parser
 
         foreach ($this->report->getBlocks() as $block) {
             if ($block instanceof VMCIDDataBlock) {
-                $machineInfo['machine_id'] = $block->vmcId ?? '';
-                $machineInfo['version'] = $block->version ?? '';
+                $machineInfo['machine_id'] = $block->serialNumber ?? '';
+                $machineInfo['model'] = $block->modelNumber ?? '';
+                $machineInfo['version'] = $block->buildStandard ?? '';
+                $machineInfo['location'] = $block->location ?? '';
+                $machineInfo['asset_number'] = $block->assetNumber ?? '';
             }
             if ($block instanceof ControlBoardDataBlock) {
-                $machineInfo['control_board'] = $block->controlBoardId ?? '';
+                $machineInfo['control_board'] = $block->modelNumber ?? '';
+                $machineInfo['control_board_serial'] = $block->serialNumber ?? '';
+                $machineInfo['control_board_build'] = $block->buildStandard ?? '';
             }
             if ($block instanceof CurrencyDataBlock) {
                 $machineInfo['currency'] = $block->currencyCode ?? '';
             }
             if ($block instanceof MachineDataBlock) {
-                $machineInfo['location'] = $block->location ?? '';
+                $machineInfo['machine_data'][] = [
+                    'identifier' => $block->blockIdentifier ?? '',
+                    'data' => $block->data ?? '',
+                ];
             }
             if ($block instanceof AuditModuleDataBlock) {
                 $machineInfo['audit_modules'][] = [
-                    'type' => $block->moduleType ?? '',
-                    'id' => $block->moduleId ?? '',
-                    'version' => $block->version ?? ''
+                    'model' => $block->modelNumber ?? '',
+                    'serial' => $block->serialNumber ?? '',
+                    'version' => $block->softwareRevision ?? '',
+                    'asset_number' => $block->assetNumber ?? '',
                 ];
             }
         }
@@ -1127,22 +1539,26 @@ class Parser
             if ($block instanceof CoinIDDataBlock) {
                 $paymentSystems['coin_systems'][] = [
                     'type' => 'coin_acceptor',
-                    'id' => $block->coinAcceptorId ?? '',
-                    'version' => $block->version ?? ''
+                    'model' => $block->modelNumber ?? '',
+                    'serial' => $block->serialNumber ?? '',
+                    'version' => $block->softwareVersion ?? '',
                 ];
             }
             if ($block instanceof BillIDDataBlock) {
                 $paymentSystems['bill_systems'][] = [
                     'type' => 'bill_validator',
-                    'id' => $block->billValidatorId ?? '',
-                    'version' => $block->version ?? ''
+                    'model' => $block->modelNumber ?? '',
+                    'serial' => $block->serialNumber ?? '',
+                    'version' => $block->softwareVersion ?? '',
                 ];
             }
             if ($block instanceof CashlessIDDataBlock) {
                 $paymentSystems['cashless_systems'][] = [
                     'type' => 'cashless_device',
-                    'id' => $block->cashlessDeviceId ?? '',
-                    'version' => $block->version ?? ''
+                    'model' => $block->modelNumber ?? '',
+                    'serial' => $block->serialNumber ?? '',
+                    'version' => $block->softwareVersion ?? '',
+                    'asset_number' => $block->assetNumber ?? '',
                 ];
             }
         }

@@ -8,23 +8,11 @@ namespace PeanutPay\PhpEvaDts;
 class MA1DataBlock extends DataBlock implements DataBlockInterface
 {
     const ASSIGNMENT = [
-        'cmdType',
-        'machineID',
-        'checksum'
+        0 => '',
+        1 => 'machineID',
+        2 => 'checksum',
     ];
 
-    public function __construct($data = null)
-    {
-        parent::__construct($data);
-    }
-
-    public function getMachineID()
-    {
-        return $this->data[1] ?? '';
-    }
-
-    public function getChecksum()
-    {
-        return $this->data[2] ?? '';
-    }
+    public $machineID = '';
+    public $checksum = '';
 }

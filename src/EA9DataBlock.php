@@ -2,29 +2,29 @@
 namespace PeanutPay\PhpEvaDts;
 
 /**
- * EA9 Data Block Class
- * Extended event audit data block type 9
+ * EA9 - Extended Event Configuration
+ *
+ * Contains extended event configuration data, typically used
+ * for event-specific parameter settings or thresholds.
+ *
+ * @package PeanutPay\PhpEvaDts
  */
 class EA9DataBlock extends DataBlock implements DataBlockInterface
 {
     const ASSIGNMENT = [
-        'cmdType',
-        'eventType',
-        'eventData'
+        0 => '',
+        1 => 'configType',
+        2 => 'configValue',
     ];
 
-    public function __construct($data = null)
-    {
-        parent::__construct($data);
-    }
+    /** @var string Configuration parameter type */
+    public $configType = '';
 
-    public function getEventType()
-    {
-        return $this->data[1] ?? '';
-    }
+    /** @var string Configuration value */
+    public $configValue = '';
 
-    public function getEventData()
+    public function __toString()
     {
-        return $this->data[2] ?? '';
+        return "EA9 Event Config: type=$this->configType value=$this->configValue";
     }
 }

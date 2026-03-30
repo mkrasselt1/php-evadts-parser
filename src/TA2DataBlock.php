@@ -3,48 +3,55 @@
 namespace PeanutPay\PhpEvaDts;
 
 /**
- * TA2 - Total Audit Data Block
- * 
- * Contains total audit counters and statistics
- * 
+ * TA2 - Value of Cash Sales
+ *
+ * Contains cash sales counters (value and number) since initialisation
+ * and since last reset, plus optional discount cash sales.
+ *
  * @package PeanutPay\PhpEvaDts
  */
 class TA2DataBlock extends DataBlock implements DataBlockInterface
 {
-    /** @var string Total value init */
-    public $totalValueInit;
-    
-    /** @var string Total number init */
-    public $totalNumberInit;
-    
-    /** @var string Total value reset */
-    public $totalValueReset;
-    
-    /** @var string Total number reset */
-    public $totalNumberReset;
-    
-    /** @var string Field 5 */
-    public $field5;
-    
-    /** @var string Field 6 */
-    public $field6;
-    
-    /** @var string Field 7 */
-    public $field7;
-    
-    /** @var string Field 8 */
-    public $field8;
-    
-    /** @var array Field assignment mapping */
     const ASSIGNMENT = [
-        0 => "cmdType",
-        1 => "totalValueInit",
-        2 => "totalNumberInit",
-        3 => "totalValueReset", 
-        4 => "totalNumberReset",
-        5 => "field5",
-        6 => "field6",
-        7 => "field7",
-        8 => "field8"
+        0 => '',
+        1 => 'valueCashSalesInit',
+        2 => 'numberCashSalesInit',
+        3 => 'valueCashSalesReset',
+        4 => 'numberCashSalesReset',
+        5 => 'valueDiscountCashSalesInit',
+        6 => 'numberDiscountCashSalesInit',
+        7 => 'valueDiscountCashSalesReset',
+        8 => 'numberDiscountCashSalesReset',
     ];
+
+    /** @var int Value of cash sales since initialisation (cents) */
+    public $valueCashSalesInit = 0;
+
+    /** @var int Number of cash sales since initialisation */
+    public $numberCashSalesInit = 0;
+
+    /** @var int Value of cash sales since last reset (cents) */
+    public $valueCashSalesReset = 0;
+
+    /** @var int Number of cash sales since last reset */
+    public $numberCashSalesReset = 0;
+
+    /** @var int Value of discount cash sales since initialisation (cents) */
+    public $valueDiscountCashSalesInit = 0;
+
+    /** @var int Number of discount cash sales since initialisation */
+    public $numberDiscountCashSalesInit = 0;
+
+    /** @var int Value of discount cash sales since last reset (cents) */
+    public $valueDiscountCashSalesReset = 0;
+
+    /** @var int Number of discount cash sales since last reset */
+    public $numberDiscountCashSalesReset = 0;
+
+    public function __toString()
+    {
+        return "TA2 Cash Sales: " .
+            ($this->valueCashSalesInit / 100) . " EUR (" . $this->numberCashSalesInit . "x) since init, " .
+            ($this->valueCashSalesReset / 100) . " EUR (" . $this->numberCashSalesReset . "x) since reset";
+    }
 }

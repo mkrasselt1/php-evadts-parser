@@ -5,6 +5,7 @@ namespace PeanutPay\PhpEvaDts;
 class CashReportDataBlock extends DataBlock
 {
     const ASSIGNMENT = [
+        0 => '',
         1 => 'cashInSinceLastReset',
         2 => 'cashToCashBoxSinceLastReset',
         3 => 'cashToTubesSinceLastReset',
@@ -13,10 +14,10 @@ class CashReportDataBlock extends DataBlock
         6 => 'cashToCashBoxSinceInitialization',
         7 => 'cashToTubesSinceInitialization',
         8 => 'billsInSinceInitialization',
-        9 => 'billsInSinceLastReset',
-        10 => 'billsInSinceInitialization',
-        11 => 'billsToRecyclerSinceLastReset',
-        12 => 'billsToRecyclerSinceInitialization',
+        9 => 'billsToRecyclerSinceLastReset',
+        10 => 'billsToRecyclerSinceInitialization',
+        11 => 'billsDispensedSinceLastReset',
+        12 => 'billsDispensedSinceInitialization',
     ];
 
     public $cashInSinceLastReset = 0;
@@ -29,6 +30,8 @@ class CashReportDataBlock extends DataBlock
     public $billsInSinceInitialization = 0;
     public $billsToRecyclerSinceLastReset = 0;
     public $billsToRecyclerSinceInitialization = 0;
+    public $billsDispensedSinceLastReset = 0;
+    public $billsDispensedSinceInitialization = 0;
 
     public function __toString()
     {
