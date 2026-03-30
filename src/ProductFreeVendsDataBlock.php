@@ -10,8 +10,8 @@ class ProductFreeVendsDataBlock extends DataBlock
         2  => "valueFreeInit",
         3  => "numberFreeReset",
         4  => "valueFreeReset",
-        3  => "numberWoCupsInit",
-        4  => "numberWoCupsReset",
+        5  => "numberWoCupsInit",
+        6  => "numberWoCupsReset",
     ];
 
     public $numberFreeInit = 0;
