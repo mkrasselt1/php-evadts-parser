@@ -219,6 +219,119 @@ class DataBlock implements DataBlockInterface
         }
     }
 
+    /**
+     * Generic getter for datablock properties.
+     *
+     * @param string $field
+     * @param mixed $default
+     * @return mixed
+     */
+    public function get(string $field, $default = null)
+    {
+        return \property_exists($this, $field) ? $this->$field : $default;
+    }
+
+    /**
+     * Generic setter for datablock properties.
+     *
+     * @param string $field
+     * @param mixed $value
+     * @return self
+     */
+    public function set(string $field, $value): self
+    {
+        if (\property_exists($this, $field)) {
+            $this->$field = $value;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Export datablock fields as associative array.
+     *
+     * @param bool $onlyAssignedFields
+     * @return array
+     */
+    public function toArray(bool $onlyAssignedFields = false): array
+    {
+        $result = [];
+
+        if ($onlyAssignedFields) {
+            foreach ($this->getAssignedFieldNames() as $field) {
+                $result[$field] = $this->get($field);
+            }
+            return $result;
+        }
+
+        foreach (\get_object_vars($this) as $key => $value) {
+            $result[$key] = $value;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Return ordered headers for table output.
+     *
+     * @param bool $onlyAssignedFields
+     * @return array
+     */
+    public function getTableHeaders(bool $onlyAssignedFields = true): array
+    {
+        if ($onlyAssignedFields) {
+            return $this->getAssignedFieldNames();
+        }
+
+        return \array_keys(\get_object_vars($this));
+    }
+
+    /**
+     * Return ordered values for table row output.
+     *
+     * @param bool $onlyAssignedFields
+     * @return array
+     */
+    public function toTableRow(bool $onlyAssignedFields = true): array
+    {
+        $headers = $this->getTableHeaders($onlyAssignedFields);
+        $row = [];
+
+        foreach ($headers as $header) {
+            $row[] = $this->get($header);
+        }
+
+        return $row;
+    }
+
+    /**
+     * Resolve assigned property names in stable order for current block type.
+     *
+     * @return array
+     */
+    protected function getAssignedFieldNames(): array
+    {
+        $className = \get_class($this);
+        $assignment = \defined($className . '::ASSIGNMENT') ? $className::ASSIGNMENT : [];
+
+        if (!\is_array($assignment) || empty($assignment)) {
+            return \array_keys(\get_object_vars($this));
+        }
+
+        $fields = [];
+        foreach ($assignment as $propertyName) {
+            if (!empty($propertyName) && \property_exists($this, $propertyName)) {
+                $fields[$propertyName] = $propertyName;
+            }
+        }
+
+        if (empty($fields)) {
+            return \array_keys(\get_object_vars($this));
+        }
+
+        return \array_values($fields);
+    }
+
     public function __toString()
     {
         $dataArray = [];

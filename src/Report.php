@@ -34,6 +34,83 @@ class Report
     }
 
     /**
+     * Build table data for all data blocks grouped by block class.
+     *
+     * @param bool $onlyAssignedFields
+     * @return array
+     */
+    public function getDataBlockTables(bool $onlyAssignedFields = true): array
+    {
+        $tables = [];
+
+        foreach ($this->blocks as $block) {
+            if (!($block instanceof DataBlockInterface)) {
+                continue;
+            }
+
+            $className = \get_class($block);
+            if (!isset($tables[$className])) {
+                $tables[$className] = [
+                    'headers' => $block->getTableHeaders($onlyAssignedFields),
+                    'rows' => [],
+                ];
+            }
+
+            $tables[$className]['rows'][] = $block->toTableRow($onlyAssignedFields);
+        }
+
+        return $tables;
+    }
+
+    /**
+     * Build table data for one block type.
+     *
+     * You can pass either the fully-qualified class name or the short class name.
+     *
+     * @param string $blockType
+     * @param bool $onlyAssignedFields
+     * @return array
+     */
+    public function getDataBlockTable(string $blockType, bool $onlyAssignedFields = true): array
+    {
+        $headers = [];
+        $rows = [];
+
+        foreach ($this->blocks as $block) {
+            if (!($block instanceof DataBlockInterface)) {
+                continue;
+            }
+
+            $className = \get_class($block);
+            $shortName = $this->getShortClassName($className);
+            if ($blockType !== $className && $blockType !== $shortName) {
+                continue;
+            }
+
+            if (empty($headers)) {
+                $headers = $block->getTableHeaders($onlyAssignedFields);
+            }
+
+            $rows[] = $block->toTableRow($onlyAssignedFields);
+        }
+
+        return [
+            'headers' => $headers,
+            'rows' => $rows,
+        ];
+    }
+
+    /**
+     * @param string $className
+     * @return string
+     */
+    private function getShortClassName(string $className): string
+    {
+        $parts = \explode('\\\\', $className);
+        return (string)\end($parts);
+    }
+
+    /**
      * Generates a structured array/table containing all pricelists, products and their sales data
      * @return array
      */

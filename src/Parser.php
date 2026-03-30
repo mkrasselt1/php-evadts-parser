@@ -139,6 +139,279 @@ class Parser
     }
 
     /**
+     * Return high-level meta blocks for downstream reporting.
+     *
+     * @return array
+     */
+    public function getMetaBlocks(): array
+    {
+        return [
+            'products' => $this->getProductMetaBlock(),
+            'events' => $this->getEventList(),
+        ];
+    }
+
+    /**
+     * Build a product-centric meta block that combines product master data,
+     * pricelists and paid sales counters.
+     *
+     * @return array
+     */
+    public function getProductMetaBlock(): array
+    {
+        if (!$this->report) {
+            return [
+                'headers' => [],
+                'rows' => [],
+                'items' => [],
+            ];
+        }
+
+        $items = [];
+
+        // PA1 — product master data (indexed by productNumber)
+        foreach ($this->report->getBlocks() as $block) {
+            if (!($block instanceof ProductDataBlock)) {
+                continue;
+            }
+
+            $productId = (string)($block->productNumber ?? 'unknown');
+            $items[$productId] = [
+                'product_id' => $productId,
+                'name' => (string)($block->name ?? ''),
+                'active' => (bool)($block->active ?? false),
+                'base_price' => (float)($block->price ?? 0) / 100,
+                'total_paid_sales' => 0,
+                'total_paid_value' => 0.0,
+                'total_test_sales' => 0,
+                'total_free_sales' => 0,
+                'price_lists' => [],
+            ];
+        }
+
+        // PA2 — ProductVendsDataBlock: paid sales per product (same positional order as PA1)
+        $productIds = array_keys($items);
+        $vendsIdx = 0;
+        foreach ($this->report->getBlocks() as $block) {
+            if (!($block instanceof ProductVendsDataBlock)) {
+                continue;
+            }
+            if (!isset($productIds[$vendsIdx])) {
+                break;
+            }
+            $productId = $productIds[$vendsIdx++];
+            $numberInit  = (int)($block->numberProductsInit ?? 0);
+            $numberReset = (int)($block->numberProductsReset ?? 0);
+            $valueInit   = (float)($block->valueProductsInit ?? 0) / 100;
+            $paidSales   = $numberInit;
+
+            $items[$productId]['total_paid_sales'] += $paidSales;
+            $items[$productId]['total_paid_value']  += $paidSales > 0 && $valueInit > 0
+                ? ($valueInit / max(1, $numberInit)) * $paidSales
+                : $valueInit;
+        }
+
+        // PA3 — ProductTestVendsDataBlock
+        $testIdx = 0;
+        foreach ($this->report->getBlocks() as $block) {
+            if (!($block instanceof ProductTestVendsDataBlock)) {
+                continue;
+            }
+            if (!isset($productIds[$testIdx])) {
+                break;
+            }
+            $productId = $productIds[$testIdx++];
+            $items[$productId]['total_test_sales'] += (int)($block->numberTestsInit ?? 0);
+        }
+
+        // PA4 — ProductFreeVendsDataBlock
+        $freeIdx = 0;
+        foreach ($this->report->getBlocks() as $block) {
+            if (!($block instanceof ProductFreeVendsDataBlock)) {
+                continue;
+            }
+            if (!isset($productIds[$freeIdx])) {
+                break;
+            }
+            $productId = $productIds[$freeIdx++];
+            $items[$productId]['total_free_sales'] += (int)($block->numberFreeInit ?? 0);
+        }
+
+        // LA1 — PriceListVendsDataBlock (adds or overrides paid sales from pricelists)
+        foreach ($this->report->getBlocks() as $block) {
+            if (!($block instanceof PriceListVendsDataBlock)) {
+                continue;
+            }
+
+            $productId = (string)($block->productNumber ?? 'unknown');
+            if (!isset($items[$productId])) {
+                $items[$productId] = [
+                    'product_id' => $productId,
+                    'name' => 'Unknown Product',
+                    'active' => false,
+                    'base_price' => 0.0,
+                    'total_paid_sales' => 0,
+                    'total_paid_value' => 0.0,
+                    'price_lists' => [],
+                ];
+            }
+
+            $numberPaidInit = (int)($block->numberPaidInit ?? 0);
+            $numberPaidReset = (int)($block->numberPaidReset ?? 0);
+            $paidSales = $numberPaidReset >= $numberPaidInit
+                ? $numberPaidReset - $numberPaidInit
+                : $numberPaidInit;
+
+            $price = (float)($block->price ?? 0) / 100;
+            $priceListId = (int)($block->priceList ?? 0);
+
+            $items[$productId]['price_lists'][] = [
+                'pricelist_id' => $priceListId,
+                'price' => $price,
+                'number_paid_init' => $numberPaidInit,
+                'number_paid_reset' => $numberPaidReset,
+                'paid_sales' => $paidSales,
+                'paid_value' => $paidSales * $price,
+            ];
+
+            $items[$productId]['total_paid_sales'] += $paidSales;
+            $items[$productId]['total_paid_value'] += $paidSales * $price;
+
+            if ((float)$items[$productId]['base_price'] <= 0.0) {
+                $items[$productId]['base_price'] = $price;
+            }
+        }
+
+        ksort($items, SORT_NATURAL);
+
+        $headers = [
+            'product_id',
+            'name',
+            'active',
+            'base_price',
+            'paid_sales',
+            'paid_value',
+            'test_sales',
+            'free_sales',
+            'price_lists',
+        ];
+
+        $rows = [];
+        foreach ($items as $item) {
+            $priceListSummary = [];
+            foreach ($item['price_lists'] as $pl) {
+                $priceListSummary[] = 'PL' . $pl['pricelist_id'] . ': ' . number_format((float)$pl['price'], 2) . ' x ' . $pl['paid_sales'];
+            }
+
+            $rows[] = [
+                $item['product_id'],
+                $item['name'],
+                $item['active'] ? '1' : '0',
+                number_format((float)$item['base_price'], 2),
+                (int)$item['total_paid_sales'],
+                number_format((float)$item['total_paid_value'], 2),
+                (int)$item['total_test_sales'],
+                (int)$item['total_free_sales'],
+                implode(', ', $priceListSummary),
+            ];
+        }
+
+        return [
+            'headers' => $headers,
+            'rows' => $rows,
+            'items' => array_values($items),
+        ];
+    }
+
+    /**
+     * Return all events in one normalized list.
+     *
+     * @return array
+     */
+    public function getEventList(): array
+    {
+        if (!$this->report) {
+            return [];
+        }
+
+        $events = [];
+        $eventId = 1;
+
+        foreach ($this->report->getBlocks() as $block) {
+            if ($block instanceof EventDataBlock) {
+                $eventCode = (string)($block->eventId ?? '');
+                $events[] = [
+                    'event_list_id' => $eventId++,
+                    'source_block' => 'EA1',
+                    'event_code' => $eventCode,
+                    'timestamp' => $this->formatEventDateTime($block->date ?? '', $block->time ?? ''),
+                    'duration_seconds' => (int)($block->durationS ?? 0),
+                    'duration_milliseconds' => (int)($block->durationMs ?? 0),
+                    'payload' => (string)($block->payload ?? ''),
+                    'event_type' => $this->categorizeEvent($eventCode),
+                    'severity_level' => $this->getEventSeverity($eventCode),
+                    'description' => $this->getEventDescription($eventCode),
+                ];
+            }
+
+            if ($block instanceof EventDetailsDataBlock) {
+                $eventCode = (string)($block->eventId ?? '');
+                $events[] = [
+                    'event_list_id' => $eventId++,
+                    'source_block' => 'EA2',
+                    'event_code' => $eventCode,
+                    'timestamp' => date('Y-m-d H:i:s'),
+                    'duration_seconds' => 0,
+                    'duration_milliseconds' => 0,
+                    'payload' => (string)($block->payload ?? ''),
+                    'event_type' => $this->categorizeEvent($eventCode),
+                    'severity_level' => $this->getEventSeverity($eventCode),
+                    'description' => $this->getEventDescription($eventCode),
+                    'number_reset' => (int)($block->numberReset ?? 0),
+                    'number_init' => (int)($block->numberInit ?? 0),
+                    'activity' => (int)($block->activity ?? 0),
+                ];
+            }
+        }
+
+        return $events;
+    }
+
+    /**
+     * Return all parsed data blocks as grouped table data.
+     *
+     * @param bool $onlyAssignedFields
+     * @return array
+     */
+    public function getDataBlockTables(bool $onlyAssignedFields = true): array
+    {
+        if (!$this->report) {
+            return [];
+        }
+
+        return $this->report->getDataBlockTables($onlyAssignedFields);
+    }
+
+    /**
+     * Return one parsed data block type as table data.
+     *
+     * @param string $blockType Fully-qualified or short class name
+     * @param bool $onlyAssignedFields
+     * @return array
+     */
+    public function getDataBlockTable(string $blockType, bool $onlyAssignedFields = true): array
+    {
+        if (!$this->report) {
+            return [
+                'headers' => [],
+                'rows' => [],
+            ];
+        }
+
+        return $this->report->getDataBlockTable($blockType, $onlyAssignedFields);
+    }
+
+    /**
      * Extract sales transaction data with detailed transaction information
      * 
      * @return array Sales data with timestamps, amounts, product_ids, transaction_types
